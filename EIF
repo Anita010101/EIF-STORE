@@ -136,7 +136,7 @@
 
     <script>
         // ⚠️ REPLACE WITH YOUR GOOGLE WEB APP URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwT-hBs736BXFBhLJBCr3yq-dfwiZE8vAeEcF8NbYfSdKiWq27Cq6TtCo1TTHHAKzdCDQ/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzSvNkKVBqxNZU9dp5nZWYnsGMeqyB8X6zP_i1bWRp_dYwd6y7huJHio8Q98VW5J34B/exec';
 
         function onScanSuccess(decodedText) {
             document.getElementById('barcode').value = decodedText;
