@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Store Inventory</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        h2 { 
+            text-align: center; 
+            color: #333; 
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        .form-group { margin-bottom: 15px; }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            color: #555; 
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus { 
+            outline: none; 
+            border-color: #667eea;
+        }
+        #reader { 
+            width: 100%; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            margin: 20px 0;
+            border: 2px solid #ddd;
+        }
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            margin-top: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled { 
+            background: #ccc; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        .success { 
+            color: #28a745; 
+            text-align: center; 
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .error { 
+            color: #dc3545; 
+            text-align: center; 
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📦 Store Inventory</h2>
+        
+        <div class="form-group">
+            <label for="store">Select Your Store</label>
+            <select id="store">
+                <option value="Store 1">Store 1</option>
+                <option value="Store 2">Store 2</option>
+                <option value="Store 3">Store 3</option>
+            </select>
+        </div>
+
+        <div id="reader"></div>
+        
+        <div class="form-group">
+            <label for="barcode">Barcode (Auto-scanned or Type)</label>
+            <input type="text" id="barcode" placeholder="Scan barcode here...">
+        </div>
+
+        <div class="form-group">
+            <label for="itemName">Item Name</label>
+            <input type="text" id="itemName" placeholder="Enter item name...">
+        </div>
+
+        <div class="form-group">
+            <label for="qty">Quantity</label>
+            <input type="number" id="qty" placeholder="Enter quantity..." min="1">
+        </div>
+
+        <div class="form-group">
+            <label for="type">In/Out Type</label>
+            <select id="type">
+                <option value="IN">➕ IN (Incoming)</option>
+                <option value="OUT">➖ OUT (Outgoing)</option>
+            </select>
+        </div>
+
+        <button onclick="sendData()" id="submitBtn">💾 SAVE TO EXCEL</button>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // ⚠️ REPLACE WITH YOUR GOOGLE WEB APP URL
+        const scriptURL = https://script.google.com/macros/s/AKfycbzpxjdTjunbZD2bsFQBRxWVShfT7LtKIHnnlsotKcNLPkfI2zdfXTSF0OYGl2_jVCiMwg/exec;
+
+        function onScanSuccess(decodedText) {
+            document.getElementById('barcode').value = decodedText;
+            console.log('Barcode scanned:', decodedText);
+        }
+
+        function onScanError(error) {
+            // Silently ignore scanner errors
+        }
+
+        // Initialize the barcode scanner
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { fps: 10, qrbox: 250 },
+            false
+        );
+        html5QrcodeScanner.render(onScanSuccess, onScanError);
+
+        async function sendData() {
+            const btn = document.getElementById('submitBtn');
+            const messageDiv = document.getElementById('message');
+
+            // Validate inputs
+            if (!document.getElementById('itemName').value) {
+                messageDiv.innerHTML = '<div class="error">❌ Please enter Item Name</div>';
+                return;
+            }
+            if (!document.getElementById('qty').value) {
+                messageDiv.innerHTML = '<div class="error">❌ Please enter Quantity</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "💾 Saving...";
+            messageDiv.innerHTML = '';
+
+            const payload = {
+                store: document.getElementById('store').value,
+                barcode: document.getElementById('barcode').value || "N/A",
+                itemName: document.getElementById('itemName').value,
+                qty: document.getElementById('qty').value,
+                type: document.getElementById('type').value
+            };
+
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                messageDiv.innerHTML = '<div class="success">✅ Saved Successfully!</div>';
+                
+                // Clear form
+                document.getElementById('barcode').value = "";
+                document.getElementById('itemName').value = "";
+                document.getElementById('qty').value = "";
+                document.getElementById('barcode').focus();
+
+                // Hide message after 3 seconds
+                setTimeout(() => {
+                    messageDiv.innerHTML = '';
+                }, 3000);
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">❌ Error saving data. Check your Google URL.</div>';
+                console.error('Error:', error);
+            }
+
+            btn.disabled = false;
+            btn.innerText = "💾 SAVE TO EXCEL";
+        }
+
+        // Focus on barcode input on page load
+        document.getElementById('barcode').focus();
+    </script>
+</body>
+</html>
