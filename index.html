@@ -20,7 +20,6 @@
         .login-btn { width: 100%; padding: 14px; background: #0f3460; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .login-btn:hover { background: #1a1a2e; }
         .login-error { color: #dc3545; font-size: 13px; text-align: center; margin-top: 8px; min-height: 20px; }
-        .login-user-type { font-size: 14px; color: #0f3460; text-align: center; margin-bottom: 8px; font-weight: 600; display: none; }
         
         /* MAIN APP */
         .app-screen { display: none; }
@@ -58,9 +57,7 @@
         
         .filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
         .filter-row select, .filter-row input { flex: 1; min-width: 100px; }
-        
         .header-row-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
-        
         .loading { text-align: center; padding: 20px; color: #888; font-size: 14px; }
         
         .table-wrap { overflow-x: auto; margin-top: 8px; }
@@ -82,14 +79,16 @@
         .positive { color: #155724; }
         .negative { color: #721c24; }
         
-        .store-option { border-left: 3px solid #0f3460; padding: 4px 8px; margin-bottom: 6px; border-radius: 4px; background: #f8f9fa; }
+        /* FOOTER */
+        .footer { text-align: center; padding: 20px 10px 10px 10px; border-top: 1px solid rgba(255,255,255,0.15); margin-top: 10px; }
+        .footer-copy { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; }
+        .footer-dev { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 4px; }
+        .footer-dev strong { color: #f0c040; }
         
         @media (max-width: 400px) {
             .nav button { font-size: 10px; padding: 8px 2px; }
             .filter-row { flex-direction: column; }
         }
-        
-        .store-tag { display: inline-block; background: #e8e8e8; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #555; }
     </style>
 </head>
 <body>
@@ -99,7 +98,6 @@
             <div class="login-logo">🏭</div>
             <div class="login-title">ENGINEERING INDUSTRIES FACTORY</div>
             <div class="login-subtitle">Inventory Management System</div>
-            <div id="userTypeDisplay" class="login-user-type"></div>
             <input type="password" id="passwordInput" class="login-input" placeholder="Enter Password" autocomplete="off" onkeypress="if(event.key==='Enter') login()">
             <button class="login-btn" onclick="login()">🔐 LOGIN</button>
             <div id="loginError" class="login-error"></div>
@@ -199,12 +197,18 @@
                 <div id="historyContent"><div class="loading">⚙️ Loading...</div></div>
             </div>
         </div>
+        
+        <!-- ============ FOOTER ============ -->
+        <div class="footer">
+            <p class="footer-copy">&copy; 2026 ENGINEERING INDUSTRIES FACTORY</p>
+            <p class="footer-dev">Developed by <strong>RAJU TAMANG</strong></p>
+        </div>
     </div>
 
     <script>
         // ============ CONFIGURATION ============
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzcngKfZHZ_dIOS5EEDC3TwN_da7GLTUZUO6BbLZ_pErITeoODj8INGTgGvXA_f4UpJ0g/exec'; // <--- PASTE YOUR GOOGLE SCRIPT URL HERE
-
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzcngKfZHZ_dIOS5EEDC3TwN_da7GLTUZUO6BbLZ_pErITeoODj8INGTgGvXA_f4UpJ0g/exec'; // <--- PASTE YOUR URL
+        
         const USERS = {
             master: { password: 'EIF2026', store: null, label: '👑 Master Admin' },
             store1: { password: 'STORE1',  store: 'Store 1', label: '🏪 Store 1' },
@@ -222,7 +226,6 @@
             for (let key in USERS) {
                 if (USERS[key].password === pwd) { found = USERS[key]; break; }
             }
-            
             if (found) {
                 currentUser = found;
                 localStorage.setItem('eifLogin', JSON.stringify({ store: found.store }));
@@ -248,11 +251,7 @@
                 try {
                     const data = JSON.parse(saved);
                     for (let key in USERS) {
-                        if (USERS[key].store === data.store) {
-                            currentUser = USERS[key];
-                            showApp();
-                            return;
-                        }
+                        if (USERS[key].store === data.store) { currentUser = USERS[key]; showApp(); return; }
                     }
                 } catch(e) {}
             }
@@ -261,58 +260,29 @@
         function showApp() {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
-            
-            // Set user badge
             document.getElementById('userBadge').textContent = currentUser.label;
-            
-            // Show/hide store badge for filtered view
             const filterBadge = document.getElementById('storeFilterBadge');
-            if (currentUser.store) {
-                filterBadge.innerHTML = `🔒 Viewing: <strong>${currentUser.store}</strong> only`;
-            } else {
-                filterBadge.innerHTML = '👑 Viewing all stores';
-            }
-            
-            // Setup store dropdown for Add tab
+            filterBadge.innerHTML = currentUser.store ? `🔒 Viewing: <strong>${currentUser.store}</strong> only` : '👑 Viewing all stores';
             setupStoreDropdown();
-            
-            // Lock store filters if not master
             setupStoreFilters();
-            
-            // Load data
             loadStores();
             populateYears();
         }
 
         function setupStoreDropdown() {
             const sel = document.getElementById('store');
-            sel.innerHTML = '';
-            if (currentUser.store) {
-                // Only their store
-                sel.innerHTML = `<option value="${currentUser.store}">${currentUser.store}</option>`;
-                sel.disabled = true;
-            } else {
-                // All stores
-                sel.innerHTML = '<option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>';
-                sel.disabled = false;
-            }
+            sel.innerHTML = currentUser.store ? `<option value="${currentUser.store}">${currentUser.store}</option>` : '<option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>';
+            sel.disabled = !!currentUser.store;
         }
 
         function setupStoreFilters() {
-            const filterIds = ['stockStore', 'histStore', 'movStore'];
-            filterIds.forEach(id => {
+            ['stockStore','histStore','movStore'].forEach(id => {
                 const sel = document.getElementById(id);
-                if (currentUser.store) {
-                    // Non-master: show only their store, locked
-                    sel.innerHTML = `<option value="${currentUser.store}">${currentUser.store}</option>`;
-                    sel.disabled = true;
-                } else {
-                    sel.disabled = false;
-                }
+                if (currentUser.store) { sel.innerHTML = `<option value="${currentUser.store}">${currentUser.store}</option>`; sel.disabled = true; }
+                else sel.disabled = false;
             });
         }
 
-        // ============ TABS ============
         function showTab(tab) {
             document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
@@ -323,7 +293,6 @@
             if(tab === 'history') loadHistory();
         }
 
-        // ============ ADD DATA ============
         async function sendData() {
             const btn = document.getElementById('submitBtn');
             const msg = document.getElementById('message');
@@ -335,90 +304,55 @@
                 type: document.getElementById('type').value,
                 dcno: document.getElementById('dcno').value
             };
-            if(!payload.itemName || !payload.dcno) {
-                msg.innerHTML = '<span style="color:red;">❌ Please fill Item Name and DC No.</span>';
-                return;
-            }
+            if(!payload.itemName || !payload.dcno) { msg.innerHTML = '<span style="color:red;">❌ Please fill Item Name and DC No.</span>'; return; }
             btn.disabled = true; btn.innerText = "Saving...";
-            msg.innerHTML = "⏳ Sending...";
             try {
                 const r = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
                 const t = await r.text();
                 if (t.includes("Success")) {
                     msg.innerHTML = '<span style="color:green;">✅ Saved Successfully!</span>';
-                    document.getElementById('itemName').value = "";
-                    document.getElementById('barcode').value = "";
-                    document.getElementById('qty').value = "1";
-                    document.getElementById('dcno').value = "";
-                } else {
-                    msg.innerHTML = '<span style="color:red;">❌ Error: ' + t + '</span>';
-                }
+                    document.getElementById('itemName').value = ""; document.getElementById('barcode').value = "";
+                    document.getElementById('qty').value = "1"; document.getElementById('dcno').value = "";
+                } else { msg.innerHTML = '<span style="color:red;">❌ Error: ' + t + '</span>'; }
             } catch(e) { msg.innerHTML = '<span style="color:red;">❌ Connection error</span>'; }
             btn.disabled = false; btn.innerText = "💾 SAVE TO EXCEL";
         }
 
-        // ============ LOAD STORES ============
         async function loadStores() {
             try {
                 const r = await fetch(scriptURL + '?action=getStores');
                 const stores = await r.json();
-                
-                // For non-master users, skip since filters are locked
                 if (currentUser.store) return;
-                
-                const filterIds = ['stockStore', 'histStore', 'movStore'];
-                filterIds.forEach(id => {
+                ['stockStore','histStore','movStore'].forEach(id => {
                     const sel = document.getElementById(id);
                     if (sel.disabled) return;
                     sel.innerHTML = '<option value="">All Stores</option>';
                     stores.forEach(s => sel.innerHTML += `<option value="${s}">${s}</option>`);
                 });
-            } catch(e) { console.log('Store load error', e); }
+            } catch(e) {}
         }
 
-        // ============ STOCK ============
         async function loadStock() {
             const div = document.getElementById('stockContent');
             div.innerHTML = '<div class="loading">⚙️ Loading...</div>';
             try {
                 const r = await fetch(scriptURL + '?action=getStock');
                 let data = await r.json();
-                
-                // Filter by user's store if not master
-                if (currentUser.store) {
-                    data = data.filter(d => d.store === currentUser.store);
-                }
-                
+                if (currentUser.store) data = data.filter(d => d.store === currentUser.store);
                 cachedData.stock = data;
-                
                 const store = document.getElementById('stockStore').value;
                 const search = document.getElementById('stockSearch').value.toLowerCase();
-                
                 let filtered = data;
                 if (store) filtered = filtered.filter(d => d.store === store);
                 if (search) filtered = filtered.filter(d => d.itemName.toLowerCase().includes(search));
-                
-                const totalItems = filtered.length;
-                const totalQty = filtered.reduce((s,d) => s + d.qty, 0);
-                document.getElementById('stockSum').innerHTML = 
-                    `<div class="count-card"><div class="num">${totalItems}</div><div class="label">Items</div></div>` +
-                    `<div class="count-card"><div class="num">${totalQty}</div><div class="label">Total Qty</div></div>`;
-                
-                if (filtered.length === 0) {
-                    div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No stock data found</div>';
-                    return;
-                }
-                
+                document.getElementById('stockSum').innerHTML = `<div class="count-card"><div class="num">${filtered.length}</div><div class="label">Items</div></div><div class="count-card"><div class="num">${filtered.reduce((s,d)=>s+d.qty,0)}</div><div class="label">Total Qty</div></div>`;
+                if (filtered.length === 0) { div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No stock data found</div>'; return; }
                 let h = '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>Balance</th></tr>';
-                filtered.forEach(d => {
-                    const cls = d.qty >= 0 ? 'positive' : 'negative';
-                    h += `<tr><td>${d.store}</td><td>${d.itemName}</td><td class="stock-qty ${cls}">${d.qty}</td></tr>`;
-                });
+                filtered.forEach(d => h += `<tr><td>${d.store}</td><td>${d.itemName}</td><td class="stock-qty ${d.qty >= 0 ? 'positive' : 'negative'}">${d.qty}</td></tr>`);
                 div.innerHTML = h + '</table></div>';
             } catch(e) { div.innerHTML = '<div class="loading" style="color:red;">❌ Error loading data</div>'; }
         }
 
-        // ============ MOVEMENT ============
         function populateYears() {
             const sel = document.getElementById('movYear');
             const curY = new Date().getFullYear();
@@ -433,98 +367,57 @@
                 const m = document.getElementById('movMonth').value;
                 const y = document.getElementById('movYear').value;
                 const s = document.getElementById('movStore').value;
-                
                 let url = `${scriptURL}?action=getMonthlyMovement&month=${m}&year=${y}`;
-                if (currentUser.store) {
-                    url += `&store=${encodeURIComponent(currentUser.store)}`;
-                } else if (s) {
-                    url += `&store=${encodeURIComponent(s)}`;
-                }
-                
+                if (currentUser.store) url += `&store=${encodeURIComponent(currentUser.store)}`;
+                else if (s) url += `&store=${encodeURIComponent(s)}`;
                 const r = await fetch(url);
                 let data = await r.json();
-                
-                // Extra filter for non-master
-                if (currentUser.store) {
-                    data = data.filter(d => d.store === currentUser.store);
-                }
-                
+                if (currentUser.store) data = data.filter(d => d.store === currentUser.store);
                 cachedData.movement = data;
-                
-                if (data.length === 0) {
-                    div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No movement data</div>';
-                    return;
-                }
-                
+                if (data.length === 0) { div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No movement data</div>'; return; }
                 let h = '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>Opening</th><th>IN</th><th>OUT</th><th>Closing</th></tr>';
-                data.forEach(d => {
-                    h += `<tr><td>${d.store}</td><td>${d.itemName}</td><td>${d.opening}</td><td class="positive">+${d.inQty}</td><td class="negative">-${d.outQty}</td><td class="stock-qty ${d.closing >= 0 ? 'positive' : 'negative'}">${d.closing}</td></tr>`;
-                });
+                data.forEach(d => h += `<tr><td>${d.store}</td><td>${d.itemName}</td><td>${d.opening}</td><td class="positive">+${d.inQty}</td><td class="negative">-${d.outQty}</td><td class="stock-qty ${d.closing >= 0 ? 'positive' : 'negative'}">${d.closing}</td></tr>`);
                 div.innerHTML = h + '</table></div>';
             } catch(e) { div.innerHTML = '<div class="loading" style="color:red;">❌ Error loading data</div>'; }
         }
 
-        // ============ HISTORY ============
         async function loadHistory() {
             const div = document.getElementById('historyContent');
             div.innerHTML = '<div class="loading">⚙️ Loading...</div>';
             try {
                 let url = scriptURL + '?action=getHistory';
-                if (currentUser.store) {
-                    url += `&store=${encodeURIComponent(currentUser.store)}`;
-                } else {
-                    const s = document.getElementById('histStore').value;
-                    if (s) url += `&store=${encodeURIComponent(s)}`;
-                }
+                if (currentUser.store) url += `&store=${encodeURIComponent(currentUser.store)}`;
+                else { const s = document.getElementById('histStore').value; if (s) url += `&store=${encodeURIComponent(s)}`; }
                 const q = document.getElementById('histSearch').value;
                 if (q) url += `&item=${encodeURIComponent(q)}`;
-                
                 const r = await fetch(url);
                 let data = await r.json();
-                
-                // Extra filter
-                if (currentUser.store) {
-                    data = data.filter(d => d.store === currentUser.store);
-                }
-                
+                if (currentUser.store) data = data.filter(d => d.store === currentUser.store);
                 cachedData.history = data;
-                
-                if (data.length === 0) {
-                    div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No transactions found</div>';
-                    return;
-                }
-                
+                if (data.length === 0) { div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No transactions found</div>'; return; }
                 let h = '<div class="table-wrap"><table><tr><th>Date</th><th>Store</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No.</th></tr>';
                 data.forEach(d => {
                     const date = d.timestamp ? d.timestamp.substring(0, 16) : '';
-                    const badge = d.type === 'IN' ? 'badge-in' : 'badge-out';
-                    h += `<tr><td>${date}</td><td>${d.store}</td><td>${d.itemName}</td><td>${d.qty}</td><td><span class="${badge}">${d.type}</span></td><td>${d.dcno}</td></tr>`;
+                    h += `<tr><td>${date}</td><td>${d.store}</td><td>${d.itemName}</td><td>${d.qty}</td><td><span class="badge-${d.type.toLowerCase()}">${d.type}</span></td><td>${d.dcno}</td></tr>`;
                 });
                 div.innerHTML = h + '</table></div>';
             } catch(e) { div.innerHTML = '<div class="loading" style="color:red;">❌ Error loading data</div>'; }
         }
 
-        // ============ EXPORT ============
         function exportCSV(type) {
             const data = cachedData[type];
             if(!data || data.length === 0) return alert("No data to export");
-            
             let headers = Object.keys(data[0]);
             let csv = headers.join(',') + '\n';
-            data.forEach(row => {
-                csv += headers.map(h => `"${(row[h]||'').toString().replace(/"/g,'""')}"`).join(',') + '\n';
-            });
-            
+            data.forEach(row => { csv += headers.map(h => `"${(row[h]||'').toString().replace(/"/g,'""')}"`).join(',') + '\n'; });
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            const suffix = currentUser.store ? `_${currentUser.store.replace(' ','')}` : '_AllStores';
-            a.download = `${type}${suffix}_${new Date().toISOString().substring(0,10)}.csv`;
+            a.download = `${type}_${new Date().toISOString().substring(0,10)}.csv`;
             a.click();
         }
 
-        // ============ INIT ============
         checkLogin();
     </script>
 </body>
