@@ -61,7 +61,12 @@
         .count-card .num { font-size: 24px; font-weight: 700; color: #0b5ed7; }
         .count-card .label { font-size: 11px; color: #666; margin-top: 2px; }
         
-        .blue-badge { background: #cce5ff; color: #004085; padding: 2px 6px; border-radius: 8px; font-weight: 600; font-size: 11px; }
+        /* EXPORT BUTTON */
+        .btn-export { padding: 8px 14px; background: #28a745; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+        .btn-export:hover { background: #1e7e34; }
+        .btn-export:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
         
         @media (max-width: 400px) {
             .nav button { font-size: 10px; padding: 8px 2px; }
@@ -71,7 +76,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- NAVIGATION - 4 Tabs -->
+        <!-- NAVIGATION -->
         <div class="nav">
             <button class="active" onclick="showTab('add')">➕ Add</button>
             <button onclick="showTab('stock')">📊 Stock</button>
@@ -115,12 +120,15 @@
             </div>
             <button class="btn-primary" id="submitBtn" onclick="sendData()">SAVE TO EXCEL</button>
             <div id="message"></div>
-            <p style="margin-top:12px;font-size:11px;color:#999;">* = required field</p>
+            <p style="margin-top:12px;font-size:11px;color:#999;">* = required field (barcode optional)</p>
         </div>
         
         <!-- TAB 2: STOCK COUNT -->
         <div class="card" id="tab-stock">
-            <h2>📊 Current Stock Balance</h2>
+            <div class="header-row">
+                <h2>📊 Current Stock Balance</h2>
+                <button class="btn-export" id="exportStockBtn" onclick="exportStock()">⬇ Download CSV</button>
+            </div>
             <div class="filter-row">
                 <select id="stockStore" onchange="loadStock()">
                     <option value="">All Stores</option>
@@ -131,9 +139,12 @@
             <div id="stockContent"><div class="loading">Loading stock data...</div></div>
         </div>
         
-        <!-- TAB 3: MONTHLY MOVEMENT (NEW) -->
+        <!-- TAB 3: MONTHLY MOVEMENT -->
         <div class="card" id="tab-movement">
-            <h2>📈 Monthly Movement</h2>
+            <div class="header-row">
+                <h2>📈 Monthly Movement</h2>
+                <button class="btn-export" id="exportMovBtn" onclick="exportMovement()">⬇ Download CSV</button>
+            </div>
             <div class="filter-row">
                 <select id="movMonth" onchange="loadMovement()">
                     <option value="1">January</option>
@@ -163,7 +174,10 @@
         
         <!-- TAB 4: HISTORY -->
         <div class="card" id="tab-history">
-            <h2>📜 Transaction History</h2>
+            <div class="header-row">
+                <h2>📜 Transaction History</h2>
+                <button class="btn-export" id="exportHistBtn" onclick="exportHistory()">⬇ Download CSV</button>
+            </div>
             <div class="filter-row">
                 <select id="histStore" onchange="loadHistory()">
                     <option value="">All Stores</option>
@@ -176,7 +190,27 @@
     
     <script>
         // ########## PASTE YOUR WEB APP URL HERE ##########
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzGX54KI_1zpiGofTnS3mtSDMjKJhQFIX_uOKIwOAVPTpSqhl1cpLLXmlKM06y8J9ZZqw/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxfGvYpIgFG9gIyBZXcQUNJsQGcMJtubMn8dVrJtCLLPByl5KJyeUFXjOZUhUDZ0Rz90w/exec';
+        
+        // ============ Helper: Download CSV ============
+        function downloadCSV(csv, filename) {
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function escapeCSV(val) {
+            if (val == null) return '';
+            val = String(val);
+            if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                return '"' + val.replace(/"/g, '""') + '"';
+            }
+            return val;
+        }
         
         // ============ TAB SWITCHING ============
         function showTab(tab) {
@@ -203,7 +237,6 @@
                 dcno: document.getElementById('dcno').value.trim()
             };
             
-            // Validation: barcode is optional, everything else required
             if (!payload.store || !payload.itemName || !payload.qty || !payload.type || !payload.dcno) {
                 msg.innerHTML = '<span style="color:red;">Please fill all required fields (barcode is optional)</span>';
                 return;
@@ -227,7 +260,7 @@
             btn.innerText = "SAVE TO EXCEL";
         }
         
-        // ============ LOAD STORES ============
+        // ============ LOAD STORES (Now shows Store 1,2,3 by default) ============
         async function loadStores() {
             try {
                 var r = await fetch(scriptURL + '?action=getStores');
@@ -244,6 +277,11 @@
             } catch(e) { console.log('Store load error', e); }
         }
         
+        // ============ STORED DATA (for export) ============
+        var cachedStockData = [];
+        var cachedMovData = [];
+        var cachedHistData = [];
+        
         // ============ STOCK COUNT ============
         async function loadStock() {
             var div = document.getElementById('stockContent');
@@ -251,34 +289,50 @@
             try {
                 var r = await fetch(scriptURL + '?action=getStock');
                 var data = await r.json();
+                cachedStockData = data;
                 
                 var store = document.getElementById('stockStore').value;
                 var search = document.getElementById('stockSearch').value.toLowerCase();
                 
-                if (store) data = data.filter(function(d) { return d.store == store; });
-                if (search) data = data.filter(function(d) { return d.itemName.toLowerCase().includes(search) || d.barcode.toLowerCase().includes(search); });
+                var filtered = data.filter(function(d) {
+                    if (store && d.store != store) return false;
+                    if (search && !d.itemName.toLowerCase().includes(search) && !(d.barcode || '').toLowerCase().includes(search)) return false;
+                    return true;
+                });
                 
-                var totalItems = data.length;
-                var totalQty = data.reduce(function(sum, d) { return sum + d.qty; }, 0);
+                var totalItems = filtered.length;
+                var totalQty = filtered.reduce(function(sum, d) { return sum + d.qty; }, 0);
                 document.getElementById('stockSummary').innerHTML =
                     '<div class="count-card"><div class="num">' + totalItems + '</div><div class="label">Items</div></div>' +
                     '<div class="count-card"><div class="num">' + totalQty + '</div><div class="label">Total Qty</div></div>';
                 
-                if (data.length == 0) {
+                if (filtered.length == 0) {
                     div.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No stock data found</div>';
                     return;
                 }
                 
                 var html = '<div class="table-wrap"><table><tr><th>Store</th><th>Barcode</th><th>Item Name</th><th>Balance</th></tr>';
-                data.forEach(function(d) {
+                filtered.forEach(function(d) {
                     var cls = d.qty > 0 ? 'positive' : 'negative';
                     html += '<tr><td>' + d.store + '</td><td>' + (d.barcode || '-') + '</td><td>' + d.itemName + '</td><td class="stock-qty ' + cls + '">' + d.qty + '</td></tr>';
                 });
                 html += '</table></div>';
                 div.innerHTML = html;
+                document.getElementById('exportStockBtn').disabled = false;
             } catch(e) {
                 div.innerHTML = '<div class="error">Error: ' + e.message + '</div>';
             }
+        }
+        
+        // ============ EXPORT STOCK CSV ============
+        function exportStock() {
+            var data = cachedStockData;
+            if (data.length == 0) { alert('No stock data to export'); return; }
+            var csv = 'Store,Barcode,Item Name,Balance\n';
+            data.forEach(function(d) {
+                csv += escapeCSV(d.store) + ',' + escapeCSV(d.barcode) + ',' + escapeCSV(d.itemName) + ',' + d.qty + '\n';
+            });
+            downloadCSV(csv, 'stock_balance_' + new Date().toISOString().substring(0,10) + '.csv');
         }
         
         // ============ MONTHLY MOVEMENT ============
@@ -307,19 +361,21 @@
                 
                 var r = await fetch(url);
                 var data = await r.json();
+                cachedMovData = data;
                 
-                if (search) data = data.filter(function(d) { return d.itemName.toLowerCase().includes(search) || (d.barcode || '').toLowerCase().includes(search); });
+                var filtered = data;
+                if (search) filtered = data.filter(function(d) { return d.itemName.toLowerCase().includes(search) || (d.barcode || '').toLowerCase().includes(search); });
                 
                 var months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 var monthName = months[parseInt(month)];
                 
-                if (data.length == 0) {
+                if (filtered.length == 0) {
                     div.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No movement data for ' + monthName + ' ' + year + '</div>';
                     return;
                 }
                 
-                var totalIn = data.reduce(function(s,d){ return s + d.inQty; }, 0);
-                var totalOut = data.reduce(function(s,d){ return s + d.outQty; }, 0);
+                var totalIn = filtered.reduce(function(s,d){ return s + d.inQty; }, 0);
+                var totalOut = filtered.reduce(function(s,d){ return s + d.outQty; }, 0);
                 
                 var html = '<div class="count-summary">' +
                     '<div class="count-card"><div class="num" style="color:#155724;">+' + totalIn + '</div><div class="label">Total IN</div></div>' +
@@ -329,7 +385,7 @@
                 html += '<p style="font-size:13px;color:#666;margin-bottom:8px;">📅 ' + monthName + ' ' + year + '</p>';
                 html += '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>Opening</th><th>IN</th><th>OUT</th><th>Closing</th></tr>';
                 
-                data.forEach(function(d) {
+                filtered.forEach(function(d) {
                     var openCls = d.opening > 0 ? 'positive' : (d.opening < 0 ? 'negative' : '');
                     var closeCls = d.closing > 0 ? 'positive' : (d.closing < 0 ? 'negative' : '');
                     html += '<tr>' +
@@ -344,9 +400,24 @@
                 
                 html += '</table></div>';
                 div.innerHTML = html;
+                document.getElementById('exportMovBtn').disabled = false;
             } catch(e) {
                 div.innerHTML = '<div class="error">Error: ' + e.message + '</div>';
             }
+        }
+        
+        // ============ EXPORT MOVEMENT CSV ============
+        function exportMovement() {
+            var data = cachedMovData;
+            if (data.length == 0) { alert('No movement data to export'); return; }
+            var month = document.getElementById('movMonth').value;
+            var year = document.getElementById('movYear').value;
+            var months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            var csv = 'Store,Barcode,Item Name,Opening,IN,OUT,Closing\n';
+            data.forEach(function(d) {
+                csv += escapeCSV(d.store) + ',' + escapeCSV(d.barcode) + ',' + escapeCSV(d.itemName) + ',' + d.opening + ',' + d.inQty + ',' + d.outQty + ',' + d.closing + '\n';
+            });
+            downloadCSV(csv, 'movement_' + months[parseInt(month)] + '_' + year + '.csv');
         }
         
         // ============ HISTORY ============
@@ -362,6 +433,7 @@
                 
                 var r = await fetch(url);
                 var data = await r.json();
+                cachedHistData = data;
                 
                 if (data.length == 0) {
                     div.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No transactions found</div>';
@@ -379,19 +451,4 @@
                         '<td>' + d.itemName + '</td>' +
                         '<td>' + sign + d.qty + '</td>' +
                         '<td><span class="' + badge + '">' + d.type + '</span></td>' +
-                        '<td>' + (d.dcno || '-') + '</td>' +
-                        '</tr>';
-                });
-                html += '</table></div>';
-                div.innerHTML = html;
-            } catch(e) {
-                div.innerHTML = '<div class="error">Error: ' + e.message + '</div>';
-            }
-        }
-        
-        // ============ INIT ============
-        populateYears();
-        loadStores();
-    </script>
-</body>
-</html>
+                        '<td>' + (d.dcno
