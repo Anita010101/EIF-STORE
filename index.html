@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EIF-STORE Inventory</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- This script is necessary for the barcode scanner to work -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 20px; 
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 450px;
+            width: 100%;
+        }
+        h2 { text-align: center; color: #1a73e8; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #444; }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            font-size: 16px;
+        }
+        #reader { width: 100%; border-radius: 8px; margin: 15px 0; border: 1px solid #ccc; background: #fafafa;}
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background: #1a73e8; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background: #1557b0; }
+        button:disabled { background: #ccc; }
+        #message { margin-top: 15px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>EIF-STORE</h2>
+        <p style="text-align:center; color:#666; margin-bottom:20px;">Store Inventory Scanner</p>
+        
+        <div class="form-group">
+            <label>Select Store</label>
+            <select id="store">
+                <option value="Store 1">Store 1</option>
+                <option value="Store 2">Store 2</option>
+                <option value="Store 3">Store 3</option>
+            </select>
+        </div>
+
+        <div id="reader"></div>
+        
+        <div class="form-group">
+            <label>Barcode</label>
+            <input type="text" id="barcode" placeholder="Scan or Type Barcode">
+        </div>
+
+        <div class="form-group">
+            <label>Item Description</label>
+            <input type="text" id="itemName" placeholder="Item Name">
+        </div>
+
+        <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" id="qty" value="1">
+        </div>
+
+        <div class="form-group">
+            <label>Transaction Type</label>
+            <select id="type">
+                <option value="IN">Stock IN (+)</option>
+                <option value="OUT">Stock OUT (-)</option>
+            </select>
+        </div>
+
+        <button onclick="sendData()" id="submitBtn">SAVE TO EXCEL</button>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // REPLACE THE URL BELOW WITH YOUR GOOGLE WEB APP URL
+        const scriptURL = https://script.google.com/macros/s/AKfycbzpxjdTjunbZD2bsFQBRxWVShfT7LtKIHnnlsotKcNLPkfI2zdfXTSF0OYGl2_jVCiMwg/exec;
+
+        function onScanSuccess(decodedText) {
+            document.getElementById('barcode').value = decodedText;
+            // Vibrate phone on success
+            if (navigator.vibrate) navigator.vibrate(100);
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render(onScanSuccess);
+
+        async function sendData() {
+            const btn = document.getElementById('submitBtn');
+            const msg = document.getElementById('message');
+            
+            if(!document.getElementById('itemName').value) {
+                alert("Please enter Item Description");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Saving...";
+            msg.innerHTML = "Sending to Google Sheets...";
+
+            const payload = {
+                store: document.getElementById('store').value,
+                barcode: document.getElementById('barcode').value,
+                itemName: document.getElementById('itemName').value,
+                qty: document.getElementById('qty').value,
+                type: document.getElementById('type').value
+            };
+
+            try {
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
+                });
+                msg.innerHTML = "<span style='color:green;'>✅ Saved Successfully!</span>";
+                document.getElementById('barcode').value = "";
+                document.getElementById('itemName').value = "";
+            } catch (e) {
+                msg.innerHTML = "<span style='color:red;'>❌ Error Saving Data</span>";
+            }
+            btn.disabled = false;
+            btn.innerText = "SAVE TO EXCEL";
+        }
+    </script>
+</body>
+</html>
