@@ -1,148 +1,285 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>EIF-STORE Inventory</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- This script is necessary for the barcode scanner to work -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EIF STORE</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            padding: 20px; 
-            background: #f0f2f5;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 16px; }
+        
+        .container { max-width: 500px; margin: 0 auto; }
+        
+        /* NAV */
+        .nav { display: flex; gap: 4px; margin-bottom: 16px; background: #fff; border-radius: 10px; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .nav button { flex: 1; padding: 10px 6px; border: none; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; transition: 0.2s; }
+        .nav button.active { background: #0b5ed7; color: #fff; }
+        .nav button:hover:not(.active) { background: #e8e8e8; }
+        
+        /* CARDS */
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: none; }
+        .card.active { display: block; }
+        
+        h2 { font-size: 18px; margin-bottom: 16px; color: #333; }
+        
+        /* FORM */
+        .form-group { margin-bottom: 14px; }
+        label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; display: block; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+        input:focus, select:focus { outline: none; border-color: #0b5ed7; }
+        
+        .btn-primary { width: 100%; padding: 14px; background: #0b5ed7; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover { background: #0949b0; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        #message { text-align: center; margin-top: 10px; font-weight: 600; font-size: 14px; }
+        
+        /* TABLE */
+        .table-wrap { overflow-x: auto; margin-top: 12px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #0b5ed7; color: #fff; padding: 10px 6px; text-align: left; white-space: nowrap; }
+        td { padding: 8px 6px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f0f4ff; }
+        
+        .badge-in { background: #d4edda; color: #155724; padding: 3px 8px; border-radius: 12px; font-weight: 600; font-size: 11px; }
+        .badge-out { background: #f8d7da; color: #721c24; padding: 3px 8px; border-radius: 12px; font-weight: 600; font-size: 11px; }
+        
+        .filter-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .filter-row select, .filter-row input { flex: 1; }
+        
+        .loading { text-align: center; padding: 30px; color: #888; }
+        .error { color: #dc3545; text-align: center; padding: 20px; }
+        
+        .stock-qty { font-weight: 700; font-size: 16px; }
+        .stock-qty.positive { color: #155724; }
+        .stock-qty.negative { color: #721c24; }
+        
+        .search-box { margin-bottom: 12px; }
+        
+        .count-summary { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+        .count-card { flex: 1; min-width: 100px; background: #f8f9fa; border-radius: 10px; padding: 12px; text-align: center; }
+        .count-card .num { font-size: 24px; font-weight: 700; color: #0b5ed7; }
+        .count-card .label { font-size: 11px; color: #666; margin-top: 2px; }
+        
+        @media (max-width: 400px) {
+            .nav button { font-size: 11px; padding: 8px 4px; }
+            .filter-row { flex-direction: column; }
         }
-        .card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 450px;
-            width: 100%;
-        }
-        h2 { text-align: center; color: #1a73e8; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; color: #444; }
-        input, select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 6px; 
-            font-size: 16px;
-        }
-        #reader { width: 100%; border-radius: 8px; margin: 15px 0; border: 1px solid #ccc; background: #fafafa;}
-        button { 
-            width: 100%; 
-            padding: 15px; 
-            background: #1a73e8; 
-            color: white; 
-            border: none; 
-            border-radius: 6px; 
-            font-size: 18px; 
-            font-weight: bold; 
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover { background: #1557b0; }
-        button:disabled { background: #ccc; }
-        #message { margin-top: 15px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>EIF-STORE</h2>
-        <p style="text-align:center; color:#666; margin-bottom:20px;">Store Inventory Scanner</p>
+    <div class="container">
+        <!-- NAVIGATION -->
+        <div class="nav">
+            <button class="active" onclick="showTab('add')">➕ Add Item</button>
+            <button onclick="showTab('stock')">📊 Stock</button>
+            <button onclick="showTab('history')">📜 History</button>
+        </div>
         
-        <div class="form-group">
-            <label>Select Store</label>
-            <select id="store">
-                <option value="Store 1">Store 1</option>
-                <option value="Store 2">Store 2</option>
-                <option value="Store 3">Store 3</option>
-            </select>
+        <!-- TAB 1: ADD ITEM (with DC No.) -->
+        <div class="card active" id="tab-add">
+            <h2>Add New Entry</h2>
+            <div class="form-group">
+                <label>Store</label>
+                <select id="store">
+                    <option value="Store 1">Store 1</option>
+                    <option value="Store 2">Store 2</option>
+                    <option value="Store 3">Store 3</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Barcode / Item Code</label>
+                <input type="text" id="barcode" placeholder="Scan or type barcode" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="itemName" placeholder="Enter item name" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="qty" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>DC No.</label>
+                <input type="text" id="dcno" placeholder="e.g. DC-001 or DC-12345" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="type">
+                    <option value="IN">IN (Stock In)</option>
+                    <option value="OUT">OUT (Stock Out)</option>
+                </select>
+            </div>
+            <button class="btn-primary" id="submitBtn" onclick="sendData()">SAVE TO EXCEL</button>
+            <div id="message"></div>
         </div>
-
-        <div id="reader"></div>
         
-        <div class="form-group">
-            <label>Barcode</label>
-            <input type="text" id="barcode" placeholder="Scan or Type Barcode">
+        <!-- TAB 2: STOCK COUNT -->
+        <div class="card" id="tab-stock">
+            <h2>📊 Stock Count</h2>
+            <div class="filter-row">
+                <select id="stockStore" onchange="loadStock()">
+                    <option value="">All Stores</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <input type="text" id="stockSearch" placeholder="🔍 Search item..." oninput="loadStock()">
+            </div>
+            <div class="count-summary" id="stockSummary"></div>
+            <div id="stockContent"><div class="loading">Loading stock data...</div></div>
         </div>
-
-        <div class="form-group">
-            <label>Item Description</label>
-            <input type="text" id="itemName" placeholder="Item Name">
+        
+        <!-- TAB 3: HISTORY (with DC No.) -->
+        <div class="card" id="tab-history">
+            <h2>📜 Transaction History</h2>
+            <div class="filter-row">
+                <select id="histStore" onchange="loadHistory()">
+                    <option value="">All Stores</option>
+                </select>
+                <input type="text" id="histSearch" placeholder="🔍 Search item/barcode..." oninput="loadHistory()">
+            </div>
+            <div id="historyContent"><div class="loading">Loading history...</div></div>
         </div>
-
-        <div class="form-group">
-            <label>Quantity</label>
-            <input type="number" id="qty" value="1">
-        </div>
-
-        <div class="form-group">
-            <label>Transaction Type</label>
-            <select id="type">
-                <option value="IN">Stock IN (+)</option>
-                <option value="OUT">Stock OUT (-)</option>
-            </select>
-        </div>
-
-        <button onclick="sendData()" id="submitBtn">SAVE TO EXCEL</button>
-        <div id="message"></div>
     </div>
-
+    
     <script>
-        // REPLACE THE URL BELOW WITH YOUR GOOGLE WEB APP URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycby07hTRwRqZhD9p1Z_PFgHP44F_B8wymaEXJ5pbZjeId1RW2le6nmO1XPVS6ERbhjI8Vg/exec';
-
-        function onScanSuccess(decodedText) {
-            document.getElementById('barcode').value = decodedText;
-            // Vibrate phone on success
-            if (navigator.vibrate) navigator.vibrate(100);
+        // ########## PASTE YOUR WEB APP URL HERE ##########
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwT-hBs736BXFBhLJBCr3yq-dfwiZE8vAeEcF8NbYfSdKiWq27Cq6TtCo1TTHHAKzdCDQ/exec';
+        
+        // ============ TAB SWITCHING ============
+        function showTab(tab) {
+            document.querySelectorAll('.nav button').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.card').forEach(function(c) { c.classList.remove('active'); });
+            var idx = {add:0, stock:1, history:2};
+            document.querySelectorAll('.nav button')[idx[tab]].classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            if (tab == 'stock') loadStock();
+            if (tab == 'history') loadHistory();
         }
-
-        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess);
-
+        
+        // ============ ADD ITEM (with DC No.) ============
         async function sendData() {
-            const btn = document.getElementById('submitBtn');
-            const msg = document.getElementById('message');
-            
-            if(!document.getElementById('itemName').value) {
-                alert("Please enter Item Description");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = "Saving...";
-            msg.innerHTML = "Sending to Google Sheets...";
-
-            const payload = {
+            var btn = document.getElementById('submitBtn');
+            var msg = document.getElementById('message');
+            var payload = {
                 store: document.getElementById('store').value,
                 barcode: document.getElementById('barcode').value,
                 itemName: document.getElementById('itemName').value,
                 qty: document.getElementById('qty').value,
-                type: document.getElementById('type').value
+                type: document.getElementById('type').value,
+                dcno: document.getElementById('dcno').value   // ← NEW
             };
-
-            try {
-                await fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(payload)
-                });
-                msg.innerHTML = "<span style='color:green;'>✅ Saved Successfully!</span>";
-                document.getElementById('barcode').value = "";
-                document.getElementById('itemName').value = "";
-            } catch (e) {
-                msg.innerHTML = "<span style='color:red;'>❌ Error Saving Data</span>";
+            if (!payload.barcode || !payload.itemName) {
+                msg.innerHTML = '<span style="color:red;">Please fill barcode and item name</span>';
+                return;
             }
+            btn.disabled = true;
+            btn.innerText = "Saving...";
+            msg.innerHTML = "⏳ Sending...";
+            try {
+                var r = await fetch(scriptURL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) });
+                var t = await r.text();
+                msg.innerHTML = t.includes("Success") ? '<span style="color:green;">✅ Saved Successfully</span>' : '<span style="color:red;">❌ ' + t + '</span>';
+                if (t.includes("Success")) {
+                    document.getElementById('barcode').value = '';
+                    document.getElementById('itemName').value = '';
+                    document.getElementById('qty').value = '1';
+                    document.getElementById('dcno').value = '';   // ← Clear DC No.
+                }
+            } catch(e) { msg.innerHTML = '<span style="color:red;">❌ Error: ' + e.message + '</span>'; }
             btn.disabled = false;
             btn.innerText = "SAVE TO EXCEL";
         }
+        
+        // ============ LOAD STORES ============
+        async function loadStores() {
+            try {
+                var r = await fetch(scriptURL + '?action=getStores');
+                var stores = await r.json();
+                ['stockStore','histStore'].forEach(function(id) {
+                    var sel = document.getElementById(id);
+                    sel.innerHTML = '<option value="">All Stores</option>';
+                    stores.forEach(function(s) {
+                        var opt = document.createElement('option');
+                        opt.value = s; opt.textContent = s;
+                        sel.appendChild(opt);
+                    });
+                });
+            } catch(e) { console.log('Store load error', e); }
+        }
+        
+        // ============ STOCK COUNT ============
+        async function loadStock() {
+            var div = document.getElementById('stockContent');
+            div.innerHTML = '<div class="loading">Loading...</div>';
+            try {
+                var r = await fetch(scriptURL + '?action=getStock');
+                var data = await r.json();
+                
+                var store = document.getElementById('stockStore').value;
+                var search = document.getElementById('stockSearch').value.toLowerCase();
+                
+                if (store) data = data.filter(function(d) { return d.store == store; });
+                if (search) data = data.filter(function(d) { return d.itemName.toLowerCase().includes(search) || d.barcode.toLowerCase().includes(search); });
+                
+                var totalItems = data.length;
+                var totalQty = data.reduce(function(sum, d) { return sum + d.qty; }, 0);
+                document.getElementById('stockSummary').innerHTML =
+                    '<div class="count-card"><div class="num">' + totalItems + '</div><div class="label">Items</div></div>' +
+                    '<div class="count-card"><div class="num">' + totalQty + '</div><div class="label">Total Qty</div></div>';
+                
+                if (data.length == 0) {
+                    div.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No stock data found</div>';
+                    return;
+                }
+                
+                var html = '<div class="table-wrap"><table><tr><th>Store</th><th>Barcode</th><th>Item</th><th>Qty</th></tr>';
+                data.forEach(function(d) {
+                    var cls = d.qty > 0 ? 'positive' : 'negative';
+                    html += '<tr><td>' + d.store + '</td><td>' + d.barcode + '</td><td>' + d.itemName + '</td><td class="stock-qty ' + cls + '">' + d.qty + '</td></tr>';
+                });
+                html += '</table></div>';
+                div.innerHTML = html;
+            } catch(e) {
+                div.innerHTML = '<div class="error">Error loading stock: ' + e.message + '</div>';
+            }
+        }
+        
+        // ============ HISTORY (with DC No.) ============
+        async function loadHistory() {
+            var div = document.getElementById('historyContent');
+            div.innerHTML = '<div class="loading">Loading...</div>';
+            try {
+                var store = document.getElementById('histStore').value;
+                var search = document.getElementById('histSearch').value;
+                var url = scriptURL + '?action=getHistory';
+                if (store) url += '&store=' + encodeURIComponent(store);
+                if (search) url += '&item=' + encodeURIComponent(search);
+                
+                var r = await fetch(url);
+                var data = await r.json();
+                
+                if (data.length == 0) {
+                    div.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No transactions found</div>';
+                    return;
+                }
+                
+                var html = '<div class="table-wrap"><table><tr><th>Date</th><th>Store</th><th>Barcode</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No.</th></tr>';
+                data.forEach(function(d) {
+                    var date = d.timestamp ? d.timestamp.substring(0, 16) : '';
+                    var badge = d.type == 'IN' ? 'badge-in' : 'badge-out';
+                    var sign = d.type == 'IN' ? '+' : '-';
+                    html += '<tr><td>' + date + '</td><td>' + d.store + '</td><td>' + d.barcode + '</td><td>' + d.itemName + '</td><td>' + sign + d.qty + '</td><td><span class="' + badge + '">' + d.type + '</span></td><td>' + (d.dcno || '-') + '</td></tr>';
+                });
+                html += '</table></div>';
+                div.innerHTML = html;
+            } catch(e) {
+                div.innerHTML = '<div class="error">Error loading history: ' + e.message + '</div>';
+            }
+        }
+        
+        // ============ INIT ============
+        loadStores();
     </script>
 </body>
 </html>
