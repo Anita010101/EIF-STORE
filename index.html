@@ -159,37 +159,53 @@
         
         // ============ ADD ITEM (with DC No.) ============
         async function sendData() {
-            var btn = document.getElementById('submitBtn');
-            var msg = document.getElementById('message');
-            var payload = {
-                store: document.getElementById('store').value,
-                barcode: document.getElementById('barcode').value,
-                itemName: document.getElementById('itemName').value,
-                qty: document.getElementById('qty').value,
-                type: document.getElementById('type').value,
-                dcno: document.getElementById('dcno').value   // ← NEW
-            };
-            if (!payload.barcode || !payload.itemName) {
-                msg.innerHTML = '<span style="color:red;">Please fill barcode and item name</span>';
-                return;
-            }
-            btn.disabled = true;
-            btn.innerText = "Saving...";
-            msg.innerHTML = "⏳ Sending...";
-            try {
-                var r = await fetch(scriptURL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) });
-                var t = await r.text();
-                msg.innerHTML = t.includes("Success") ? '<span style="color:green;">✅ Saved Successfully</span>' : '<span style="color:red;">❌ ' + t + '</span>';
-                if (t.includes("Success")) {
-                    document.getElementById('barcode').value = '';
-                    document.getElementById('itemName').value = '';
-                    document.getElementById('qty').value = '1';
-                    document.getElementById('dcno').value = '';   // ← Clear DC No.
-                }
-            } catch(e) { msg.innerHTML = '<span style="color:red;">❌ Error: ' + e.message + '</span>'; }
-            btn.disabled = false;
-            btn.innerText = "SAVE TO EXCEL";
+    var btn = document.getElementById('submitBtn');
+    var msg = document.getElementById('message');
+
+    var payload = {
+        store: document.getElementById('store').value.trim(),
+        barcode: document.getElementById('barcode').value.trim(),   // optional
+        itemName: document.getElementById('itemName').value.trim(),
+        qty: document.getElementById('qty').value.trim(),
+        type: document.getElementById('type').value.trim(),
+        dcno: document.getElementById('dcno').value.trim()
+    };
+
+    if (!payload.store || !payload.itemName || !payload.qty || !payload.type || !payload.dcno) {
+        msg.innerHTML = '<span style="color:red;">Please fill all required fields except barcode</span>';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Saving...";
+    msg.innerHTML = "⏳ Sending...";
+
+    try {
+        var r = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+
+        var t = await r.text();
+        msg.innerHTML = t.includes("Success")
+            ? '<span style="color:green;">✅ Saved Successfully</span>'
+            : '<span style="color:red;">❌ ' + t + '</span>';
+
+        if (t.includes("Success")) {
+            document.getElementById('barcode').value = '';
+            document.getElementById('itemName').value = '';
+            document.getElementById('qty').value = '1';
+            document.getElementById('dcno').value = '';
         }
+    } catch (e) {
+        msg.innerHTML = '<span style="color:red;">❌ Error: ' + e.message + '</span>';
+    }
+
+    btn.disabled = false;
+    btn.innerText = "SAVE TO EXCEL";
+}
+
         
         // ============ LOAD STORES ============
         async function loadStores() {
