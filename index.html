@@ -4,94 +4,292 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIF STORE - Engineering Industries Factory</title>
+    <!-- SheetJS Library to read Excel files properly -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Keep your existing CSS here - same as before */
-        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #fff; padding: 20px; }
-        .card { background: #fff; color: #000; border-radius: 12px; padding: 20px; max-width: 500px; margin: 0 auto; }
-        .btn-success { width: 100%; padding: 14px; background: #28a745; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
-        .import-section { border: 2px dashed #ccc; padding: 16px; margin: 12px 0; border-radius: 10px; }
-        .msg-success { color: green; font-weight: 600; }
-        .msg-error { color: red; font-weight: 600; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 16px; min-height: 100vh; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        /* Login Styles */
+        .login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90vh; }
+        .login-box { background: #fff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
+        .login-title { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 24px; }
+        .login-input { width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; margin-bottom: 12px; text-align: center; }
+        .login-btn { width: 100%; padding: 14px; background: #0f3460; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        
+        /* App Styles */
+        .app-screen { display: none; }
+        .header { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+        .logout-btn { padding: 6px 12px; background: #dc3545; color: #fff; border: none; border-radius: 6px; font-size: 11px; cursor: pointer; }
+
+        .nav { display: flex; gap: 4px; margin-bottom: 12px; background: #fff; border-radius: 10px; padding: 4px; overflow-x: auto; }
+        .nav button { flex: 1; padding: 10px; border: none; border-radius: 8px; background: transparent; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; white-space: nowrap; }
+        .nav button.active { background: #0f3460; color: #fff; }
+
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: none; margin-bottom: 16px; }
+        .card.active { display: block; }
+        h2 { font-size: 18px; margin-bottom: 15px; color: #1a1a2e; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
+
+        .form-group { margin-bottom: 15px; }
+        label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        
+        .btn-primary { width: 100%; padding: 14px; background: #0f3460; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .btn-success { width: 100%; padding: 14px; background: #28a745; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+        
+        /* Table Styles */
+        .table-wrap { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #f8f9fa; padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        
+        .msg-success { color: #155724; background: #d4edda; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; text-align: center; }
+        .msg-error { color: #721c24; background: #f8d7da; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; text-align: center; }
+        .import-box { border: 2px dashed #0f3460; padding: 20px; border-radius: 12px; text-align: center; background: #f8faff; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>📥 Import Opening Stock</h2>
-    
-    <div class="form-group">
-        <label>Select Store *</label>
-        <select id="importStore">
-            <option value="Store 1">Store 1</option>
-            <option value="Store 2">Store 2</option>
-            <option value="Store 3">Store 3</option>
-        </select>
+<div class="container">
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <div style="font-size: 40px; margin-bottom: 10px;">🏭</div>
+            <div class="login-title">ENGINEERING INDUSTRIES FACTORY</div>
+            <input type="password" id="passwordInput" class="login-input" placeholder="Enter Password">
+            <button class="login-btn" onclick="login()">LOGIN</button>
+            <p id="loginError" style="color:red; font-size:12px; margin-top:10px;"></p>
+        </div>
     </div>
 
-    <div class="import-section">
-        <h3>📁 Upload Excel File (.xlsx)</h3>
-        <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
-        <button class="btn-success" id="uploadBtn" onclick="importFromFile()">📤 IMPORT FILE</button>
+    <!-- MAIN APP SCREEN -->
+    <div id="appScreen" class="app-screen">
+        <div class="header">
+            <div class="header-title">EIF - <span id="storeNameDisp">Store</span></div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="nav">
+            <button class="active" onclick="showTab('add', this)">Add Item</button>
+            <button onclick="showTab('stock', this)">Stock</button>
+            <button id="importTabBtn" onclick="showTab('import', this)">Import</button>
+        </div>
+
+        <!-- ADD TRANSACTION TAB -->
+        <div class="card active" id="tab-add">
+            <h2>Add Transaction</h2>
+            <div class="form-group"><label>Store</label><select id="storeSelect"></select></div>
+            <div class="form-group"><label>Item Name</label><input type="text" id="itemName" placeholder="Type item name..."></div>
+            <div class="form-group"><label>Quantity</label><input type="number" id="qty" value="1"></div>
+            <div class="form-group"><label>DC No.</label><input type="text" id="dcno" placeholder="Delivery Note No."></div>
+            <button class="btn-primary" id="saveBtn" onclick="saveData()">SAVE TRANSACTION</button>
+            <div id="saveMsg"></div>
+        </div>
+
+        <!-- STOCK BALANCE TAB -->
+        <div class="card" id="tab-stock">
+            <h2>Live Stock Balance</h2>
+            <input type="text" id="stockSearch" placeholder="Filter items..." oninput="filterStock()" style="margin-bottom:10px;">
+            <div id="stockSummary" style="font-size:12px; margin-bottom:10px; color:#666;"></div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Item Name</th><th>Balance</th></tr></thead>
+                    <tbody id="stockTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- IMPORT TAB -->
+        <div class="card" id="tab-import">
+            <h2>Import Opening Stock</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Upload your Excel file (.xlsx). Ensure Item Name is in <b>Column D</b> and Quantity is in <b>Column E</b>.</p>
+            
+            <div class="form-group">
+                <label>Target Store</label>
+                <select id="importStoreSelect">
+                    <option value="Store 1">Store 1</option>
+                    <option value="Store 2">Store 2</option>
+                    <option value="Store 3">Store 3</option>
+                </select>
+            </div>
+
+            <div class="import-box">
+                <input type="file" id="excelFile" accept=".xlsx, .xls" style="margin-bottom:15px;">
+                <button class="btn-success" id="importBtn" onclick="importFromFile()">START IMPORT</button>
+            </div>
+            <div id="importMsg"></div>
+        </div>
     </div>
-    
-    <div id="importMsg" style="margin-top:12px;"></div>
 </div>
 
 <script>
+// ========================================================
+// ⚠️ PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW
+// ========================================================
 const scriptURL = 'https://script.google.com/macros/s/AKfycbzUi95ElenX579FYcz8CGkwgNIF870QDuMUwYb8L0Vne3ktKpaK-Dz4pnvwgsrKc58WBQ/exec';
+// ========================================================
 
+const USERS = {
+    'EIF2026': { name: 'Master Admin', store: null },
+    'STORE1': { name: 'Store 1', store: 'Store 1' },
+    'STORE2': { name: 'Store 2', store: 'Store 2' },
+    'STORE3': { name: 'Store 3', store: 'Store 3' }
+};
+
+let currentUser = null;
+let fullStockData = [];
+
+function login() {
+    const pass = document.getElementById('passwordInput').value.trim().toUpperCase();
+    if (USERS[pass]) {
+        currentUser = USERS[pass];
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'block';
+        setupApp();
+    } else {
+        document.getElementById('loginError').textContent = 'Invalid Password';
+    }
+}
+
+function logout() { location.reload(); }
+
+function setupApp() {
+    document.getElementById('storeNameDisp').textContent = currentUser.name;
+    const s1 = document.getElementById('storeSelect');
+    const s2 = document.getElementById('importStoreSelect');
+    
+    // Hide Import for non-admins
+    document.getElementById('importTabBtn').style.display = currentUser.store ? 'none' : 'block';
+
+    if (currentUser.store) {
+        const opt = `<option value="${currentUser.store}">${currentUser.store}</option>`;
+        s1.innerHTML = opt; s1.disabled = true;
+        s2.innerHTML = opt; s2.disabled = true;
+    } else {
+        const opts = `<option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>`;
+        s1.innerHTML = opts;
+        s2.innerHTML = opts;
+    }
+    loadStock();
+}
+
+function showTab(tabId, btn) {
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    btn.classList.add('active');
+    if(tabId === 'stock') loadStock();
+}
+
+async function saveData() {
+    const btn = document.getElementById('saveBtn');
+    const msg = document.getElementById('saveMsg');
+    const item = document.getElementById('itemName').value.trim();
+    const qty = document.getElementById('qty').value;
+    
+    if(!item || !qty) return alert('Fill all fields');
+
+    btn.disabled = true; btn.textContent = 'Saving...';
+    
+    try {
+        const payload = {
+            store: document.getElementById('storeSelect').value,
+            itemName: item,
+            qty: qty,
+            dcno: document.getElementById('dcno').value
+        };
+
+        const res = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if(result.status === 'success') {
+            msg.innerHTML = '<div class="msg-success">Saved Successfully!</div>';
+            document.getElementById('itemName').value = '';
+            document.getElementById('dcno').value = '';
+        }
+    } catch(e) {
+        msg.innerHTML = '<div class="msg-error">Error: ' + e.message + '</div>';
+    } finally {
+        btn.disabled = false; btn.textContent = 'SAVE TRANSACTION';
+    }
+}
+
+async function loadStock() {
+    const tbody = document.getElementById('stockTableBody');
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center">Loading data...</td></tr>';
+    
+    try {
+        const res = await fetch(scriptURL + '?action=getStock');
+        fullStockData = await res.json();
+        filterStock();
+    } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="2" style="color:red">Failed to load stock</td></tr>';
+    }
+}
+
+function filterStock() {
+    const query = document.getElementById('stockSearch').value.toLowerCase();
+    const tbody = document.getElementById('stockTableBody');
+    const currentStore = currentUser.store;
+    
+    let filtered = fullStockData;
+    if(currentStore) filtered = filtered.filter(x => x.store === currentStore);
+    if(query) filtered = filtered.filter(x => x.itemName.toLowerCase().includes(query));
+    
+    document.getElementById('stockSummary').textContent = `Showing ${filtered.length} items`;
+    
+    tbody.innerHTML = filtered.map(item => `
+        <tr>
+            <td>${item.itemName}</td>
+            <td style="font-weight:bold; color:${item.qty < 0 ? 'red' : 'green'}">${item.qty}</td>
+        </tr>
+    `).join('');
+}
+
+// ================= EXCEL IMPORT LOGIC (SheetJS) =================
 async function importFromFile() {
     const fileInput = document.getElementById('excelFile');
     const file = fileInput.files[0];
-    const msgDiv = document.getElementById('importMsg');
-    const btn = document.getElementById('uploadBtn');
+    const btn = document.getElementById('importBtn');
+    const msg = document.getElementById('importMsg');
 
-    if (!file) return alert('Please select a file');
-    
-    btn.textContent = '⏳ Reading Excel file...';
-    btn.disabled = true;
-    msgDiv.innerHTML = '';
+    if (!file) return alert('Select an Excel file');
+
+    btn.disabled = true; btn.textContent = 'Reading Excel...';
+    msg.innerHTML = '';
 
     try {
-        const store = document.getElementById('importStore').value;
-        
-        // Read Excel file properly using SheetJS
+        const store = document.getElementById('importStoreSelect').value;
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // raw rows
-
-        console.log("Total rows in Excel:", jsonData.length);
-
-        const items = [];
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
         
-        for (let i = 0; i < jsonData.length; i++) {
-            const row = jsonData[i];
-            if (!row || row.length < 2) continue;
-            
-            // Skip header row
-            if (i === 0 && (String(row[0]).toLowerCase().includes('item') || String(row[0]).toLowerCase().includes('name'))) continue;
-            
-            // Column D = Item Name (index 3), Column E = Quantity (index 4)
-            const itemName = String(row[3] || '').trim();   // Column D
-            const qty = parseFloat(row[4]);                 // Column E
-            
+        // Convert to array of arrays
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        const items = [];
+
+        // Loop rows (start at index 1 to skip header)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.length < 5) continue;
+
+            const itemName = String(row[3] || '').trim(); // Column D
+            const qty = parseFloat(row[4]);              // Column E
+
             if (itemName && !isNaN(qty)) {
                 items.push({ store: store, itemName: itemName, qty: qty });
             }
         }
 
-        console.log("Valid items found:", items.length);
+        if (items.length === 0) throw new Error('No valid items found (Check Columns D and E)');
 
-        if (items.length === 0) {
-            msgDiv.innerHTML = '<div class="msg-error">❌ No valid items found in the file</div>';
-            btn.textContent = '📤 IMPORT FILE';
-            btn.disabled = false;
-            return;
-        }
-
-        btn.textContent = '⏳ Sending ' + items.length + ' items...';
+        btn.textContent = `Uploading ${items.length} items...`;
 
         const response = await fetch(scriptURL, {
             method: 'POST',
@@ -100,20 +298,17 @@ async function importFromFile() {
         });
 
         const result = await response.json();
-
         if (result.status === 'success') {
-            msgDiv.innerHTML = `<div class="msg-success">✅ Successfully imported <strong>${result.imported}</strong> items!</div>`;
+            msg.innerHTML = `<div class="msg-success">✅ Successfully imported ${result.imported} items to ${store}!</div>`;
             fileInput.value = '';
         } else {
-            msgDiv.innerHTML = `<div class="msg-error">❌ ${result.message}</div>`;
+            throw new Error(result.message);
         }
 
     } catch (e) {
-        console.error(e);
-        msgDiv.innerHTML = `<div class="msg-error">❌ Error: ${e.message}</div>`;
+        msg.innerHTML = `<div class="msg-error">❌ Error: ${e.message}</div>`;
     } finally {
-        btn.textContent = '📤 IMPORT FILE';
-        btn.disabled = false;
+        btn.disabled = false; btn.textContent = 'START IMPORT';
     }
 }
 </script>
