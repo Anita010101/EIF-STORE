@@ -12,7 +12,7 @@
         
         /* NAV */
         .nav { display: flex; gap: 4px; margin-bottom: 16px; background: #fff; border-radius: 10px; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-        .nav button { flex: 1; padding: 10px 6px; border: none; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; transition: 0.2s; }
+        .nav button { flex: 1; padding: 10px 4px; border: none; border-radius: 8px; background: transparent; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; transition: 0.2s; }
         .nav button.active { background: #0b5ed7; color: #fff; }
         .nav button:hover:not(.active) { background: #e8e8e8; }
         
@@ -44,8 +44,8 @@
         .badge-in { background: #d4edda; color: #155724; padding: 3px 8px; border-radius: 12px; font-weight: 600; font-size: 11px; }
         .badge-out { background: #f8d7da; color: #721c24; padding: 3px 8px; border-radius: 12px; font-weight: 600; font-size: 11px; }
         
-        .filter-row { display: flex; gap: 8px; margin-bottom: 12px; }
-        .filter-row select, .filter-row input { flex: 1; }
+        .filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .filter-row select, .filter-row input { flex: 1; min-width: 100px; }
         
         .loading { text-align: center; padding: 30px; color: #888; }
         .error { color: #dc3545; text-align: center; padding: 20px; }
@@ -61,26 +61,29 @@
         .count-card .num { font-size: 24px; font-weight: 700; color: #0b5ed7; }
         .count-card .label { font-size: 11px; color: #666; margin-top: 2px; }
         
+        .blue-badge { background: #cce5ff; color: #004085; padding: 2px 6px; border-radius: 8px; font-weight: 600; font-size: 11px; }
+        
         @media (max-width: 400px) {
-            .nav button { font-size: 11px; padding: 8px 4px; }
+            .nav button { font-size: 10px; padding: 8px 2px; }
             .filter-row { flex-direction: column; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- NAVIGATION -->
+        <!-- NAVIGATION - 4 Tabs -->
         <div class="nav">
-            <button class="active" onclick="showTab('add')">➕ Add Item</button>
+            <button class="active" onclick="showTab('add')">➕ Add</button>
             <button onclick="showTab('stock')">📊 Stock</button>
+            <button onclick="showTab('movement')">📈 Movement</button>
             <button onclick="showTab('history')">📜 History</button>
         </div>
         
-        <!-- TAB 1: ADD ITEM (with DC No.) -->
+        <!-- TAB 1: ADD ITEM -->
         <div class="card active" id="tab-add">
             <h2>Add New Entry</h2>
             <div class="form-group">
-                <label>Store</label>
+                <label>Store *</label>
                 <select id="store">
                     <option value="Store 1">Store 1</option>
                     <option value="Store 2">Store 2</option>
@@ -88,23 +91,23 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Barcode / Item Code</label>
+                <label>Barcode / Item Code <span style="color:#999;">(optional)</span></label>
                 <input type="text" id="barcode" placeholder="Scan or type barcode" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>Item Name</label>
+                <label>Item Name *</label>
                 <input type="text" id="itemName" placeholder="Enter item name" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>Quantity</label>
+                <label>Quantity *</label>
                 <input type="number" id="qty" value="1" min="1">
             </div>
             <div class="form-group">
-                <label>DC No.</label>
-                <input type="text" id="dcno" placeholder="e.g. DC-001 or DC-12345" autocomplete="off">
+                <label>DC No. *</label>
+                <input type="text" id="dcno" placeholder="e.g. DC-001" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>Type</label>
+                <label>Type *</label>
                 <select id="type">
                     <option value="IN">IN (Stock In)</option>
                     <option value="OUT">OUT (Stock Out)</option>
@@ -112,24 +115,53 @@
             </div>
             <button class="btn-primary" id="submitBtn" onclick="sendData()">SAVE TO EXCEL</button>
             <div id="message"></div>
+            <p style="margin-top:12px;font-size:11px;color:#999;">* = required field</p>
         </div>
         
         <!-- TAB 2: STOCK COUNT -->
         <div class="card" id="tab-stock">
-            <h2>📊 Stock Count</h2>
+            <h2>📊 Current Stock Balance</h2>
             <div class="filter-row">
                 <select id="stockStore" onchange="loadStock()">
                     <option value="">All Stores</option>
                 </select>
-            </div>
-            <div class="search-box">
                 <input type="text" id="stockSearch" placeholder="🔍 Search item..." oninput="loadStock()">
             </div>
             <div class="count-summary" id="stockSummary"></div>
             <div id="stockContent"><div class="loading">Loading stock data...</div></div>
         </div>
         
-        <!-- TAB 3: HISTORY (with DC No.) -->
+        <!-- TAB 3: MONTHLY MOVEMENT (NEW) -->
+        <div class="card" id="tab-movement">
+            <h2>📈 Monthly Movement</h2>
+            <div class="filter-row">
+                <select id="movMonth" onchange="loadMovement()">
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+                <select id="movYear" onchange="loadMovement()">
+                </select>
+                <select id="movStore" onchange="loadMovement()">
+                    <option value="">All Stores</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <input type="text" id="movSearch" placeholder="🔍 Search item..." oninput="loadMovement()">
+            </div>
+            <div id="movementContent"><div class="loading">Loading movement data...</div></div>
+        </div>
+        
+        <!-- TAB 4: HISTORY -->
         <div class="card" id="tab-history">
             <h2>📜 Transaction History</h2>
             <div class="filter-row">
@@ -144,75 +176,63 @@
     
     <script>
         // ########## PASTE YOUR WEB APP URL HERE ##########
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwT-hBs736BXFBhLJBCr3yq-dfwiZE8vAeEcF8NbYfSdKiWq27Cq6TtCo1TTHHAKzdCDQ/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzGX54KI_1zpiGofTnS3mtSDMjKJhQFIX_uOKIwOAVPTpSqhl1cpLLXmlKM06y8J9ZZqw/exec';
         
         // ============ TAB SWITCHING ============
         function showTab(tab) {
             document.querySelectorAll('.nav button').forEach(function(b) { b.classList.remove('active'); });
             document.querySelectorAll('.card').forEach(function(c) { c.classList.remove('active'); });
-            var idx = {add:0, stock:1, history:2};
+            var idx = {add:0, stock:1, movement:2, history:3};
             document.querySelectorAll('.nav button')[idx[tab]].classList.add('active');
             document.getElementById('tab-' + tab).classList.add('active');
             if (tab == 'stock') loadStock();
+            if (tab == 'movement') loadMovement();
             if (tab == 'history') loadHistory();
         }
         
-        // ============ ADD ITEM (with DC No.) ============
+        // ============ ADD ITEM ============
         async function sendData() {
-    var btn = document.getElementById('submitBtn');
-    var msg = document.getElementById('message');
-
-    var payload = {
-        store: document.getElementById('store').value.trim(),
-        barcode: document.getElementById('barcode').value.trim(),   // optional
-        itemName: document.getElementById('itemName').value.trim(),
-        qty: document.getElementById('qty').value.trim(),
-        type: document.getElementById('type').value.trim(),
-        dcno: document.getElementById('dcno').value.trim()
-    };
-
-    if (!payload.store || !payload.itemName || !payload.qty || !payload.type || !payload.dcno) {
-        msg.innerHTML = '<span style="color:red;">Please fill all required fields except barcode</span>';
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerText = "Saving...";
-    msg.innerHTML = "⏳ Sending...";
-
-    try {
-        var r = await fetch(scriptURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
-        });
-
-        var t = await r.text();
-        msg.innerHTML = t.includes("Success")
-            ? '<span style="color:green;">✅ Saved Successfully</span>'
-            : '<span style="color:red;">❌ ' + t + '</span>';
-
-        if (t.includes("Success")) {
-            document.getElementById('barcode').value = '';
-            document.getElementById('itemName').value = '';
-            document.getElementById('qty').value = '1';
-            document.getElementById('dcno').value = '';
+            var btn = document.getElementById('submitBtn');
+            var msg = document.getElementById('message');
+            var payload = {
+                store: document.getElementById('store').value.trim(),
+                barcode: document.getElementById('barcode').value.trim(),
+                itemName: document.getElementById('itemName').value.trim(),
+                qty: document.getElementById('qty').value.trim(),
+                type: document.getElementById('type').value.trim(),
+                dcno: document.getElementById('dcno').value.trim()
+            };
+            
+            // Validation: barcode is optional, everything else required
+            if (!payload.store || !payload.itemName || !payload.qty || !payload.type || !payload.dcno) {
+                msg.innerHTML = '<span style="color:red;">Please fill all required fields (barcode is optional)</span>';
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerText = "Saving...";
+            msg.innerHTML = "⏳ Sending...";
+            try {
+                var r = await fetch(scriptURL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) });
+                var t = await r.text();
+                msg.innerHTML = t.includes("Success") ? '<span style="color:green;">✅ Saved Successfully</span>' : '<span style="color:red;">❌ ' + t + '</span>';
+                if (t.includes("Success")) {
+                    document.getElementById('barcode').value = '';
+                    document.getElementById('itemName').value = '';
+                    document.getElementById('qty').value = '1';
+                    document.getElementById('dcno').value = '';
+                }
+            } catch(e) { msg.innerHTML = '<span style="color:red;">❌ Error: ' + e.message + '</span>'; }
+            btn.disabled = false;
+            btn.innerText = "SAVE TO EXCEL";
         }
-    } catch (e) {
-        msg.innerHTML = '<span style="color:red;">❌ Error: ' + e.message + '</span>';
-    }
-
-    btn.disabled = false;
-    btn.innerText = "SAVE TO EXCEL";
-}
-
         
         // ============ LOAD STORES ============
         async function loadStores() {
             try {
                 var r = await fetch(scriptURL + '?action=getStores');
                 var stores = await r.json();
-                ['stockStore','histStore'].forEach(function(id) {
+                ['stockStore','histStore','movStore'].forEach(function(id) {
                     var sel = document.getElementById(id);
                     sel.innerHTML = '<option value="">All Stores</option>';
                     stores.forEach(function(s) {
@@ -249,19 +269,87 @@
                     return;
                 }
                 
-                var html = '<div class="table-wrap"><table><tr><th>Store</th><th>Barcode</th><th>Item</th><th>Qty</th></tr>';
+                var html = '<div class="table-wrap"><table><tr><th>Store</th><th>Barcode</th><th>Item Name</th><th>Balance</th></tr>';
                 data.forEach(function(d) {
                     var cls = d.qty > 0 ? 'positive' : 'negative';
-                    html += '<tr><td>' + d.store + '</td><td>' + d.barcode + '</td><td>' + d.itemName + '</td><td class="stock-qty ' + cls + '">' + d.qty + '</td></tr>';
+                    html += '<tr><td>' + d.store + '</td><td>' + (d.barcode || '-') + '</td><td>' + d.itemName + '</td><td class="stock-qty ' + cls + '">' + d.qty + '</td></tr>';
                 });
                 html += '</table></div>';
                 div.innerHTML = html;
             } catch(e) {
-                div.innerHTML = '<div class="error">Error loading stock: ' + e.message + '</div>';
+                div.innerHTML = '<div class="error">Error: ' + e.message + '</div>';
             }
         }
         
-        // ============ HISTORY (with DC No.) ============
+        // ============ MONTHLY MOVEMENT ============
+        function populateYears() {
+            var sel = document.getElementById('movYear');
+            var curr = new Date().getFullYear();
+            for (var y = curr; y >= curr - 2; y--) {
+                var opt = document.createElement('option');
+                opt.value = y; opt.textContent = y;
+                sel.appendChild(opt);
+            }
+            sel.value = curr;
+        }
+        
+        async function loadMovement() {
+            var div = document.getElementById('movementContent');
+            div.innerHTML = '<div class="loading">Loading...</div>';
+            try {
+                var month = document.getElementById('movMonth').value;
+                var year = document.getElementById('movYear').value;
+                var store = document.getElementById('movStore').value;
+                var search = document.getElementById('movSearch').value.toLowerCase();
+                
+                var url = scriptURL + '?action=getMonthlyMovement&month=' + month + '&year=' + year;
+                if (store) url += '&store=' + encodeURIComponent(store);
+                
+                var r = await fetch(url);
+                var data = await r.json();
+                
+                if (search) data = data.filter(function(d) { return d.itemName.toLowerCase().includes(search) || (d.barcode || '').toLowerCase().includes(search); });
+                
+                var months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                var monthName = months[parseInt(month)];
+                
+                if (data.length == 0) {
+                    div.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No movement data for ' + monthName + ' ' + year + '</div>';
+                    return;
+                }
+                
+                var totalIn = data.reduce(function(s,d){ return s + d.inQty; }, 0);
+                var totalOut = data.reduce(function(s,d){ return s + d.outQty; }, 0);
+                
+                var html = '<div class="count-summary">' +
+                    '<div class="count-card"><div class="num" style="color:#155724;">+' + totalIn + '</div><div class="label">Total IN</div></div>' +
+                    '<div class="count-card"><div class="num" style="color:#721c24;">-' + totalOut + '</div><div class="label">Total OUT</div></div>' +
+                    '</div>';
+                
+                html += '<p style="font-size:13px;color:#666;margin-bottom:8px;">📅 ' + monthName + ' ' + year + '</p>';
+                html += '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>Opening</th><th>IN</th><th>OUT</th><th>Closing</th></tr>';
+                
+                data.forEach(function(d) {
+                    var openCls = d.opening > 0 ? 'positive' : (d.opening < 0 ? 'negative' : '');
+                    var closeCls = d.closing > 0 ? 'positive' : (d.closing < 0 ? 'negative' : '');
+                    html += '<tr>' +
+                        '<td>' + d.store + '</td>' +
+                        '<td>' + d.itemName + '</td>' +
+                        '<td class="stock-qty ' + openCls + '">' + d.opening + '</td>' +
+                        '<td style="color:#155724;font-weight:600;">' + d.inQty + '</td>' +
+                        '<td style="color:#721c24;font-weight:600;">' + d.outQty + '</td>' +
+                        '<td class="stock-qty ' + closeCls + '">' + d.closing + '</td>' +
+                        '</tr>';
+                });
+                
+                html += '</table></div>';
+                div.innerHTML = html;
+            } catch(e) {
+                div.innerHTML = '<div class="error">Error: ' + e.message + '</div>';
+            }
+        }
+        
+        // ============ HISTORY ============
         async function loadHistory() {
             var div = document.getElementById('historyContent');
             div.innerHTML = '<div class="loading">Loading...</div>';
@@ -280,21 +368,29 @@
                     return;
                 }
                 
-                var html = '<div class="table-wrap"><table><tr><th>Date</th><th>Store</th><th>Barcode</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No.</th></tr>';
+                var html = '<div class="table-wrap"><table><tr><th>Date</th><th>Store</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No.</th></tr>';
                 data.forEach(function(d) {
                     var date = d.timestamp ? d.timestamp.substring(0, 16) : '';
                     var badge = d.type == 'IN' ? 'badge-in' : 'badge-out';
                     var sign = d.type == 'IN' ? '+' : '-';
-                    html += '<tr><td>' + date + '</td><td>' + d.store + '</td><td>' + d.barcode + '</td><td>' + d.itemName + '</td><td>' + sign + d.qty + '</td><td><span class="' + badge + '">' + d.type + '</span></td><td>' + (d.dcno || '-') + '</td></tr>';
+                    html += '<tr>' +
+                        '<td>' + date + '</td>' +
+                        '<td>' + d.store + '</td>' +
+                        '<td>' + d.itemName + '</td>' +
+                        '<td>' + sign + d.qty + '</td>' +
+                        '<td><span class="' + badge + '">' + d.type + '</span></td>' +
+                        '<td>' + (d.dcno || '-') + '</td>' +
+                        '</tr>';
                 });
                 html += '</table></div>';
                 div.innerHTML = html;
             } catch(e) {
-                div.innerHTML = '<div class="error">Error loading history: ' + e.message + '</div>';
+                div.innerHTML = '<div class="error">Error: ' + e.message + '</div>';
             }
         }
         
         // ============ INIT ============
+        populateYears();
         loadStores();
     </script>
 </body>
