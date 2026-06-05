@@ -178,7 +178,7 @@
 
 <script>
 // ==================== CHANGE THIS URL ====================
-const scriptURL = 'https://script.google.com/macros/s/AKfycbzSBIzAguyygqbo4eMU3NdFUGIDa9iRKZmCr_3nFU4pkJyPwb010EEJ584oqvl87EBxfA/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzksJQSsAUhQdMhGx03DBD93FDp0eVhy4KUsL-dt3O_9xFfCl6DG0a5pto5xYFdQClMCw/exec';
 // ========================================================
 
 const USERS = {
@@ -325,20 +325,99 @@ async function loadMovement() { /* similar to before */ }
 async function loadHistory() { /* similar to before */ }
 
 async function importFromFile() {
-    const file = document.getElementById('excelFile').files[0];
-    if (!file) return alert('Select a file');
+    const fileInput = document.getElementById('excelFile');
+    const file = fileInput.files[0];
+    const msgDiv = document.getElementById('importMsg');
+
+    if (!file) { return alert('❌ Please select a file first!'); }
+
     const btn = document.getElementById('uploadBtn');
-    btn.textContent = '⏳ Reading...';
+    btn.textContent = '⏳ Reading ' + file.name + '...';
     btn.disabled = true;
-    const text = await file.text();
-    const store = document.getElementById('importStore').value;
-    const items = parseData(text, store, true);
-    if (items.length === 0) { alert('No valid data'); btn.textContent = '📤 UPLOAD & IMPORT FILE'; btn.disabled = false; return; }
-    await fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'importOpening', items: items }) });
-    alert('Imported ' + items.length + ' items');
-    btn.textContent = '📤 UPLOAD & IMPORT FILE';
-    btn.disabled = false;
+    msgDiv.innerHTML = '';
+
+    try {
+        const store = document.getElementById('importStore').value;
+        let items = [];
+        
+        // Read file as text
+        const text = await file.text();
+        const allLines = text.split('\n');
+        
+        console.log("Total lines in file:", allLines.length);
+        
+        // Process ALL lines
+        for (let i = 0; i < allLines.length; i++) {
+            const line = allLines[i].trim();
+            if (!line) continue;
+            
+            // Skip header row (first row if it contains text headers)
+            if (i === 0 && (line.toLowerCase().includes('item') || line.toLowerCase().includes('name') || line.toLowerCase().includes('qty') || line.toLowerCase().includes('quantity'))) {
+                continue;
+            }
+            
+            // Try splitting by tab first, then comma, then pipe
+            let parts = [];
+            if (line.includes('\t')) {
+                parts = line.split('\t');
+            } else if (line.includes(',')) {
+                parts = line.split(',');
+            } else if (line.includes('|')) {
+                parts = line.split('|');
+            } else {
+                // Multiple spaces
+                parts = line.split(/\s{2,}/);
+            }
+            
+            if (parts.length >= 2) {
+                const name = parts[0].trim().replace(/^["']|["']$/g, ''); // Remove quotes
+                const rawQty = parts[parts.length - 1].trim().replace(/^["']|["']$/g, '').replace(/[^0-9.-]/g, '');
+                
+                if (name && !isNaN(rawQty) && rawQty !== '') {
+                    items.push({ store: store, itemName: name, qty: parseFloat(rawQty) });
+                }
+            }
+        }
+        
+        console.log("Parsed items:", items.length);
+        
+        if (items.length === 0) {
+            msgDiv.innerHTML = '<div class="msg-error">❌ No valid data found! First 3 lines of file:<br>' + 
+                allLines.slice(0, 3).join('<br>').substring(0, 200) + '</div>';
+            btn.textContent = '📤 UPLOAD & IMPORT FILE';
+            btn.disabled = false;
+            return;
+        }
+        
+        btn.textContent = '⏳ Sending ' + items.length + ' items to Google Sheet...';
+        
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'importOpening', items: items })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            msgDiv.innerHTML = '<div class="msg-success">✅ Successfully imported <strong>' + result.imported + '</strong> items to ' + store + '!<br>' +
+                (result.skipped > 0 ? '⚠️ ' + result.skipped + ' rows were skipped' : '') + '</div>';
+            fileInput.value = '';
+            // Refresh stock automatically
+            loadStock();
+        } else {
+            msgDiv.innerHTML = '<div class="msg-error">❌ ' + result.message + '</div>';
+        }
+        
+    } catch (e) {
+        console.error("Import error:", e);
+        msgDiv.innerHTML = '<div class="msg-error">❌ Error: ' + e.message + '<br>Check console for details</div>';
+    } finally {
+        btn.textContent = '📤 UPLOAD & IMPORT FILE';
+        btn.disabled = false;
+    }
 }
+
 
 async function processImport() {
     const txt = document.getElementById('importData').value;
