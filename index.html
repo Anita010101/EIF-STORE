@@ -246,20 +246,54 @@
             document.getElementById('historyContent').innerHTML = h + '</table>';
         }
 
-        async function processImport() {
-            const txt = document.getElementById('importData').value;
-            const store = document.getElementById('importStore').value;
-            const lines = txt.split('\n');
-            const items = [];
-            lines.forEach(l => {
-                const parts = l.split(',');
-                if(parts.length >= 2) items.push({ store: store, itemName: parts[0].trim(), qty: parts[1].trim() });
-            });
-            if(items.length === 0) return alert("No data");
-            await fetch(scriptURL, { method:'POST', body: JSON.stringify({ action: 'importOpening', items: items }) });
-            alert("Import Successful!");
-            document.getElementById('importData').value = "";
+       async function processImport() {
+    const txt = document.getElementById('importData').value;
+    const store = document.getElementById('importStore').value;
+    const lines = txt.split('\n');
+    const items = [];
+    
+    lines.forEach(l => {
+        if (!l.trim()) return; // Skip empty lines
+        
+        // This regex looks for a COMMA OR a TAB OR TWO OR MORE SPACES
+        // It helps catch data copied directly from Excel
+        let parts = l.split(/,|\t|  +/); 
+        
+        if(parts.length >= 2) {
+            const name = parts[0].trim();
+            const q = parts[parts.length - 1].trim(); // Take the last part as quantity
+            
+            if (name && !isNaN(q)) {
+                items.push({ store: store, itemName: name, qty: q });
+            }
         }
+    });
+
+    if(items.length === 0) {
+        alert("❌ Error: Could not find valid data. Please ensure it looks like: ItemName  Quantity");
+        return;
+    }
+
+    const btn = event.currentTarget;
+    btn.innerText = "⏳ Importing " + items.length + " items...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(scriptURL, { 
+            method:'POST', 
+            body: JSON.stringify({ action: 'importOpening', items: items }) 
+        });
+        const result = await response.text();
+        alert("✅ Success! Imported " + items.length + " items to " + store);
+        document.getElementById('importData').value = "";
+    } catch (e) {
+        alert("❌ Connection Error: " + e.message);
+    } finally {
+        btn.innerText = "📥 IMPORT NOW";
+        btn.disabled = false;
+    }
+}
+
 
         function populateYears() {
             const sel = document.getElementById('movYear');
