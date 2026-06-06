@@ -33,13 +33,20 @@
         }
 
         /* Login Screen */
-        #loginScreen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-        }
+       #loginScreen { 
+    position: fixed !important; 
+    top: 0 !important; 
+    left: 0 !important; 
+    width: 100% !important; 
+    height: 100% !important;
+    z-index: 9999 !important;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+}
+
+#appScreen {
+    display: none !important;
+}
+
 
         .login-box {
             background: white;
@@ -724,7 +731,10 @@ function logout() { localStorage.removeItem('eifUser'); location.reload(); }
 
 // ===================== SHOW APP =====================
 function showApp() {
-    document.getElementById('loginScreen').style.display = 'none';
+    /* Screen Management */
+.screen { display: none !important; }
+.screen.active { display: flex !important; flex-direction: column; min-height: 100vh; }
+
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('userBadge').textContent = currentUser.label;
 
