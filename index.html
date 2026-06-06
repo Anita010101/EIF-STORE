@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIF Inventory Manager</title>
-    
-    <!-- Load XLSX Library FIRST -->
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
@@ -15,7 +12,6 @@
         .screen { display: none; }
         .screen.active { display: block; }
         
-        /* LOGIN SCREEN */
         #loginScreen {
             display: flex;
             justify-content: center;
@@ -55,7 +51,6 @@
         .login-box button:hover { background: #764ba2; }
         #loginError { color: red; margin-bottom: 12px; font-size: 14px; }
         
-        /* APP SCREEN */
         #appScreen {
             display: flex;
             flex-direction: column;
@@ -149,8 +144,17 @@
             font-size: 14px;
             font-family: inherit;
         }
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .form-row .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
         
-        .btn-primary, .btn-success {
+        .btn-primary, .btn-success, .btn-danger {
             padding: 10px 16px;
             border: none;
             border-radius: 6px;
@@ -162,6 +166,8 @@
         .btn-primary:hover { background: #0b5ed7; }
         .btn-success { background: #198754; color: white; }
         .btn-success:hover { background: #157347; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #bb2d3b; }
         
         table {
             width: 100%;
@@ -180,13 +186,20 @@
         .divider span { color: #999; font-weight: 500; }
         
         textarea { resize: vertical; }
+        
+        #addResult {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+        }
+        #addResult.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; display: block; }
+        #addResult.error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; display: block; }
     </style>
 </head>
-
-
 <body>
 
-<!-- ========== LOGIN SCREEN ========== -->
+<!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
     <div class="login-box">
         <h1>🔐 EIF Inventory</h1>
@@ -197,9 +210,8 @@
     </div>
 </div>
 
-<!-- ========== APP SCREEN ========== -->
+<!-- APP SCREEN -->
 <div id="appScreen" class="screen">
-    <!-- HEADER -->
     <div class="header">
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
@@ -213,18 +225,17 @@
     <!-- NAVIGATION -->
     <div class="nav">
         <button class="nav-btn active" onclick="showTab('stock', this)">📊 Live Balance</button>
+        <button class="nav-btn" onclick="showTab('add', this)">➕ Add Stock</button>
         <button class="nav-btn" onclick="showTab('history', this)">📜 History</button>
         <button class="nav-btn" onclick="showTab('movement', this)">📈 Movement</button>
-        <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)">📥 Import</button>
+        <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)" style="display:none;">📥 Import</button>
     </div>
 
-    <!-- CONTAINER -->
     <div class="container">
 
         <!-- STOCK TAB -->
         <div class="card active" id="tab-stock">
             <h2>📊 Live Stock Balance</h2>
-            
             <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
                 <select id="stockStoreFilter" onchange="renderStock()" 
                     style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
@@ -233,14 +244,66 @@
                     oninput="renderStock()" 
                     style="flex:1;min-width:180px;padding:8px;border-radius:6px;border:1px solid #ddd;">
             </div>
-
             <div id="stockContent">⏳ Loading...</div>
+        </div>
+
+        <!-- ADD STOCK TAB -->
+        <div class="card" id="tab-add">
+            <h2>➕ Add Stock Transaction</h2>
+            <div id="addResult"></div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🏪 Store *</label>
+                    <select id="addStore">
+                        <option value="">Select Store</option>
+                        <option value="Store 1">Store 1</option>
+                        <option value="Store 2">Store 2</option>
+                        <option value="Store 3">Store 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📦 Type *</label>
+                    <select id="addType">
+                        <option value="">Select Type</option>
+                        <option value="IN">📥 IN (Stock In)</option>
+                        <option value="OUT">📤 OUT (Stock Out)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📝 Item Name *</label>
+                <input type="text" id="addItemName" placeholder="Enter item name" list="itemSuggestions">
+                <datalist id="itemSuggestions"></datalist>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🔢 Quantity *</label>
+                    <input type="number" id="addQty" placeholder="0" min="0" step="any">
+                </div>
+                <div class="form-group">
+                    <label>📄 DC No.</label>
+                    <input type="text" id="addDcNo" placeholder="Optional">
+                </div>
+            </div>
+
+            <button class="btn-success" onclick="addStock()" style="width:100%;padding:12px;font-size:16px;margin-top:8px;">
+                ✅ SUBMIT STOCK
+            </button>
+
+            <div style="margin-top:24px;padding:16px;background:#f0f8ff;border-radius:8px;">
+                <h3 style="margin-bottom:8px;">📌 Quick Guide</h3>
+                <p><strong>IN</strong> = Stock coming into store (purchase, transfer in)</p>
+                <p><strong>OUT</strong> = Stock leaving store (sale, transfer out, wastage)</p>
+                <p style="color:#666;margin-top:8px;font-size:13px;">✅ After submission, check Live Balance to see updated stock!</p>
+            </div>
         </div>
 
         <!-- HISTORY TAB -->
         <div class="card" id="tab-history">
             <h2>📜 Transaction History</h2>
-            
             <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
                 <select id="historyStoreFilter" onchange="renderHistory()" 
                     style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
@@ -249,14 +312,12 @@
                     oninput="renderHistory()" 
                     style="flex:1;min-width:180px;padding:8px;border-radius:6px;border:1px solid #ddd;">
             </div>
-
             <div id="historyContent">⏳ Loading...</div>
         </div>
 
         <!-- MOVEMENT TAB -->
         <div class="card" id="tab-movement">
             <h2>📈 Stock Movement</h2>
-            
             <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
                 <select id="movementYear" onchange="renderMovement()" 
                     style="min-width:110px;padding:8px;border-radius:6px;border:1px solid #ddd;">
@@ -268,7 +329,6 @@
                     style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
                 </select>
             </div>
-
             <div id="movementContent">⏳ Loading...</div>
         </div>
 
@@ -288,7 +348,7 @@
             <div class="import-section">
                 <h3>📁 Upload Excel / CSV</h3>
                 <input type="file" id="excelFile" class="import-file-input" accept=".xlsx,.xls,.csv">
-                <button class="btn-success" id="uploadBtn" onclick="()" style="width:100%;">📤 UPLOAD & IMPORT</button>
+                <button class="btn-success" id="uploadBtn" onclick="importFromFile()" style="width:100%;">📤 UPLOAD & IMPORT</button>
             </div>
 
             <div class="divider"><hr><span>OR</span><hr></div>
@@ -303,10 +363,9 @@
     </div>
 </div>
 
-<!-- ========== JAVASCRIPT ========== -->
 <script>
-// CONFIG
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxDClYGoYSqbLPpaW02N7-Gqy3DKgNnMl0DDNHkYY5rEe9wcYG3wTlu4Pim5c7YQZAb8w/exec';
+// ===================== CONFIG =====================
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzgXlZDbdTmslCWOFsEq0ol86E1V0-H3E-hrXs6Dyo8Ym2GAajN0GHBnMM6HntUU3tF/exec';
 
 const USERS = {
     master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
@@ -319,7 +378,7 @@ let currentUser = null;
 let allStockData = [];
 let allHistoryData = [];
 
-// ========== LOGIN ==========
+// ===================== LOGIN =====================
 function login() {
     const pwd = document.getElementById('passwordInput').value.trim().toUpperCase();
     let found = null;
@@ -335,22 +394,27 @@ function login() {
 
 function logout() { localStorage.removeItem('eifUser'); location.reload(); }
 
-// ========== SHOW APP ==========
+// ===================== SHOW APP =====================
 function showApp() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('userBadge').textContent = currentUser.label;
 
-    // Import button - master only
     const importBtn = document.getElementById('importNavBtn');
     if (importBtn) importBtn.style.display = currentUser.store === null ? 'inline-block' : 'none';
+
+    // Set store in Add Stock form
+    if (currentUser.store) {
+        document.getElementById('addStore').value = currentUser.store;
+        document.getElementById('addStore').disabled = true;
+    }
 
     populateStoreDropdowns();
     populateMonthYear();
     loadStock();
 }
 
-// ========== POPULATE DROPDOWNS ==========
+// ===================== POPULATE DROPDOWNS =====================
 function populateStoreDropdowns() {
     const isMaster = currentUser.store === null;
     const stores = ['Store 1', 'Store 2', 'Store 3'];
@@ -390,7 +454,7 @@ function populateMonthYear() {
     }
 }
 
-// ========== SHOW TAB ==========
+// ===================== SHOW TAB =====================
 function showTab(tab, btn) {
     if (tab === 'import' && currentUser && currentUser.store !== null) return alert('⛔ Access Denied');
     document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
@@ -401,9 +465,88 @@ function showTab(tab, btn) {
     if (tab === 'stock') loadStock();
     if (tab === 'history') loadHistory();
     if (tab === 'movement') loadMovement();
+    if (tab === 'add') loadItemSuggestions();
 }
 
-// ========== LOAD STOCK ==========
+// ===================== ITEM SUGGESTIONS =====================
+async function loadItemSuggestions() {
+    try {
+        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
+        const data = await r.json();
+        
+        // If user is store-specific, filter
+        let items = data;
+        if (currentUser.store) items = items.filter(d => d.store === currentUser.store);
+        
+        const names = [...new Set(items.map(d => d.itemName))].sort();
+        
+        const datalist = document.getElementById('itemSuggestions');
+        datalist.innerHTML = names.map(n => `<option value="${n}">`).join('');
+    } catch (e) {
+        console.log('Item suggestions error:', e);
+    }
+}
+
+// ===================== ADD STOCK =====================
+async function addStock() {
+    const store = document.getElementById('addStore').value;
+    const type = document.getElementById('addType').value;
+    const itemName = document.getElementById('addItemName').value.trim();
+    const qty = document.getElementById('addQty').value.trim();
+    const dcNo = document.getElementById('addDcNo').value.trim();
+
+    // Validation
+    if (!store) return showAddResult('❌ Please select a store!', 'error');
+    if (!type) return showAddResult('❌ Please select IN or OUT!', 'error');
+    if (!itemName) return showAddResult('❌ Please enter item name!', 'error');
+    if (!qty || parseFloat(qty) <= 0) return showAddResult('❌ Please enter a valid quantity!', 'error');
+
+    showAddResult('⏳ Submitting...', '');
+
+    try {
+        const res = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: 'addStock',
+                store: store,
+                itemName: itemName,
+                qty: parseFloat(qty),
+                type: type,
+                dcNo: dcNo
+            })
+        });
+
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            showAddResult('✅ ' + result.message, 'success');
+            // Clear form
+            document.getElementById('addItemName').value = '';
+            document.getElementById('addQty').value = '';
+            document.getElementById('addDcNo').value = '';
+            
+            // Refresh data
+            loadStock();
+            loadHistory();
+        } else {
+            showAddResult('❌ ' + (result.message || 'Failed'), 'error');
+        }
+    } catch (e) {
+        showAddResult('❌ Error: ' + e.message, 'error');
+    }
+}
+
+function showAddResult(msg, type) {
+    const div = document.getElementById('addResult');
+    div.textContent = msg;
+    div.className = type;
+    div.style.display = 'block';
+    
+    if (type === 'success') setTimeout(() => { div.style.display = 'none'; }, 3000);
+}
+
+// ===================== LOAD STOCK =====================
 async function loadStock() {
     const div = document.getElementById('stockContent');
     if (!div) return;
@@ -436,7 +579,7 @@ function renderStock() {
     div.innerHTML = html + '</tbody></table>';
 }
 
-// ========== LOAD HISTORY ==========
+// ===================== LOAD HISTORY =====================
 async function loadHistory() {
     const div = document.getElementById('historyContent');
     if (!div) return;
@@ -450,191 +593,4 @@ async function loadHistory() {
 
 function renderHistory() {
     const div = document.getElementById('historyContent');
-    const storeFilter = document.getElementById('historyStoreFilter')?.value || '';
-    const search = (document.getElementById('historySearch')?.value || '').toLowerCase();
-
-    let rows = allHistoryData;
-    if (currentUser.store) rows = rows.filter(d => d.store === currentUser.store);
-    else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
-    if (search) rows = rows.filter(d => (d.itemName || '').toLowerCase().includes(search));
-
-    if (!rows.length) { div.innerHTML = '<p style="text-align:center;color:#999;padding:30px;">No records found</p>'; return; }
-
-    let html = '<table><thead><tr><th>Date</th><th>Store</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No</th></tr></thead><tbody>';
-    rows.forEach(d => {
-        const typeStyle = d.type === 'IN' ? 'color:green;font-weight:bold;' : 'color:red;font-weight:bold;';
-        html += `<tr><td>${d.date || ''}</td><td>${d.store || ''}</td><td>${d.itemName || ''}</td><td>${d.qty || ''}</td><td style="${typeStyle}">${d.type || ''}</td><td>${d.dcNo || ''}</td></tr>`;
-    });
-    div.innerHTML = html + '</tbody></table>';
-}
-
-// ========== LOAD MOVEMENT ==========
-async function loadMovement() {
-    const div = document.getElementById('movementContent');
-    if (!div) return;
-    div.innerHTML = '⏳ Loading movement...';
-    try {
-        const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
-        allHistoryData = await r.json();
-        renderMovement();
-    } catch (e) { div.innerHTML = '❌ Error: ' + e.message; }
-}
-
-function renderMovement() {
-    const div = document.getElementById('movementContent');
-    const storeFilter = document.getElementById('movementStoreFilter')?.value || '';
-    const yearFilter = document.getElementById('movementYear')?.value || '';
-    const monthFilter = document.getElementById('movementMonth')?.value || '';
-
-    let rows = allHistoryData;
-    if (currentUser.store) rows = rows.filter(d => d.store === currentUser.store);
-    else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
-
-    if (yearFilter) rows = rows.filter(d => {
-        const dt = new Date(d.date);
-        return !isNaN(dt) && dt.getFullYear() == yearFilter;
-    });
-    if (monthFilter) rows = rows.filter(d => {
-        const dt = new Date(d.date);
-        return !isNaN(dt) && (dt.getMonth() + 1) == monthFilter;
-    });
-
-    const groups = {};
-    rows.forEach(d => {
-        const key = `${d.store}||${d.itemName}`;
-        if (!groups[key]) groups[key] = { store: d.store, itemName: d.itemName, inQty: 0, outQty: 0 };
-        if (d.type === 'IN') groups[key].inQty += parseFloat(d.qty) || 0;
-        if (d.type === 'OUT') groups[key].outQty += parseFloat(d.qty) || 0;
-    });
-
-    const result = Object.values(groups);
-    if (!result.length) { div.innerHTML = '<p style="text-align:center;color:#999;padding:30px;">No movement data found</p>'; return; }
-
-    let html = '<table><thead><tr><th>Store</th><th>Item</th><th style="color:green;">IN</th><th style="color:red;">OUT</th><th>Net</th></tr></thead><tbody>';
-    result.forEach(d => {
-        const net = d.inQty - d.outQty;
-        const netStyle = net >= 0 ? 'color:green;font-weight:bold;' : 'color:red;font-weight:bold;';
-        html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td style="color:green;">+${d.inQty}</td><td style="color:red;">-${d.outQty}</td><td style="${netStyle}">${net >= 0 ? '+' : ''}${net}</td></tr>`;
-    });
-    div.innerHTML = html + '</tbody></table>';
-}
-
-
-// ========== IMPORT FROM FILE ==========
-async function importFromFile() {
-    const fileInput = document.getElementById('excelFile');
-    const file = fileInput.files[0];
-    if (!file) return alert('⚠️ Select a file first');
-
-    const store = document.getElementById('importStore').value;
-    if (!store) return alert('⚠️ Select a store first');
-
-    const btn = document.getElementById('uploadBtn');
-    btn.textContent = '⏳ Processing...';
-    btn.disabled = true;
-
-    try {
-        const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        
-        const items = [];
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            if (row[0]) {
-                items.push({
-                    itemName: row[0].toString().trim(),
-                    qty: parseFloat(row[1]) || 0
-                });
-            }
-        }
-
-        if (!items.length) throw new Error('No data found in file');
-
-        const res = await fetch(scriptURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
-                action: 'importOpening',
-                store: store,
-                items: items 
-            })
-        });
-        
-        const result = await res.json();
-        if (result.status === 'success') {
-            alert(`✅ ${result.message}`);
-            fileInput.value = '';
-        } else {
-            throw new Error(result.message || 'Import failed');
-        }
-    } catch (e) {
-        alert('❌ ' + e.message);
-    } finally {
-        btn.textContent = '📤 UPLOAD & IMPORT';
-        btn.disabled = false;
-    }
-}
-
-
-
-// ========== PASTE IMPORT ==========
-async function processImport() {
-    const txt = document.getElementById('importData').value.trim();
-    if (!txt) return alert('Paste data first');
-    
-    const store = document.getElementById('importStore').value;
-    if (!store) return alert('Select a store first');
-
-    const items = txt.split('\n').map(line => {
-        const p = line.split('\t');
-        return { 
-            itemName: (p[0] || '').trim(), 
-            qty: parseFloat(p[1]) || 0 
-        };
-    }).filter(i => i.itemName);
-
-    if (!items.length) return alert('No valid data found');
-
-    try {
-        const res = await fetch(scriptURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
-                action: 'importOpening',
-                store: store,
-                items: items 
-            })
-        });
-        const result = await res.json();
-        if (result.status === 'success') {
-            alert(`✅ ${result.message}`);
-            document.getElementById('importData').value = '';
-        } else {
-            throw new Error(result.message || 'Import failed');
-        }
-    } catch (e) { 
-        alert('❌ Error: ' + e.message); 
-    }
-}
-
-
-// ========== AUTO LOGIN ==========
-const _saved = localStorage.getItem('eifUser');
-if (_saved) {
-    try {
-        const d = JSON.parse(_saved);
-        for (let k in USERS) {
-            if (USERS[k].store === d.store) {
-                currentUser = USERS[k];
-                showApp();
-                break;
-            }
-        }
-    } catch (e) { localStorage.removeItem('eifUser'); }
-}
-</script>
-
-</body>
-</html>
+   
