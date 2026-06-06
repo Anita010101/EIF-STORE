@@ -91,6 +91,8 @@
         }
     </style>
 </head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <body>
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="login-screen">
@@ -317,7 +319,35 @@
             } catch(e) { msg.innerHTML = '<span style="color:red;">❌ Connection error</span>'; }
             btn.disabled = false; btn.innerText = "💾 SAVE TO EXCEL";
         }
+<div id="uploadSection" style="margin-top:20px; padding:16px; border:1px dashed #cfd8e3; border-radius:12px; background:#f8fbff;">
+    <h3 style="margin-bottom:10px; font-size:16px; color:#1f2a44;">Upload Opening Stock</h3>
+    
+    <p style="font-size:12px; color:#666; margin-bottom:12px;">
+        Excel rule: <b>Column D = Item Name</b>, <b>Column E = Quantity</b>, first row = header
+    </p>
 
+    <div style="margin-bottom:10px;">
+        <label style="display:block; margin-bottom:6px; font-weight:600;">Store</label>
+        <select id="importStore" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:10px;">
+            <option value="Store 1">Store 1</option>
+            <option value="Store 2">Store 2</option>
+            <option value="Store 3">Store 3</option>
+        </select>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label style="display:block; margin-bottom:6px; font-weight:600;">Excel File</label>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; background:#fff;">
+    </div>
+
+    <button type="button" id="importBtn" onclick="importFromFile()" style="width:100%; padding:14px; background:#1d3f72; color:#fff; border:none; border-radius:10px; font-weight:700; cursor:pointer;">
+        UPLOAD ITEM DATA
+    </button>
+
+    <div id="importMsg" style="margin-top:10px;"></div>
+</div>
+
+        
         async function loadStores() {
             try {
                 const r = await fetch(scriptURL + '?action=getStores');
@@ -417,6 +447,93 @@
             a.download = `${type}_${new Date().toISOString().substring(0,10)}.csv`;
             a.click();
         }
+<script>
+async function importFromFile() {
+    const fileInput = document.getElementById('excelFile');
+    const importBtn = document.getElementById('importBtn');
+    const importMsg = document.getElementById('importMsg');
+    const store = document.getElementById('importStore').value;
+    const file = fileInput.files[0];
+
+    if (!file) {
+        importMsg.innerHTML = '<div style="color:#721c24;background:#f8d7da;padding:10px;border-radius:8px;">Please select an Excel file.</div>';
+        return;
+    }
+
+    importBtn.disabled = true;
+    importBtn.textContent = 'Reading Excel...';
+    importMsg.innerHTML = '';
+
+    try {
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+        const items = [];
+
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.length < 5) continue;
+
+            const itemName = String(row[3] || '').trim(); // Column D
+            const qtyRaw = String(row[4] || '').replace(/,/g, '').trim(); // Column E
+            const qty = parseFloat(qtyRaw);
+
+            if (itemName && !isNaN(qty)) {
+                items.push({
+                    store: store,
+                    itemName: itemName,
+                    qty: qty
+                });
+            }
+        }
+
+        if (items.length === 0) {
+            throw new Error('No valid items found. Check Excel columns: D = Item Name, E = Quantity.');
+        }
+
+        importBtn.textContent = 'Uploading ' + items.length + ' items...';
+
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify({
+                action: 'importOpening',
+                items: items
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            importMsg.innerHTML = '<div style="color:#155724;background:#d4edda;padding:10px;border-radius:8px;">Successfully imported ' + result.imported + ' items to Opening Stock.</div>';
+            fileInput.value = '';
+
+            if (typeof loadStock === 'function') {
+                loadStock();
+            }
+            if (typeof loadHistory === 'function') {
+                loadHistory();
+            }
+            if (typeof loadMovement === 'function') {
+                loadMovement();
+            }
+        } else {
+            throw new Error(result.message || 'Import failed.');
+        }
+
+    } catch (error) {
+        importMsg.innerHTML = '<div style="color:#721c24;background:#f8d7da;padding:10px;border-radius:8px;">Error: ' + error.message + '</div>';
+    } finally {
+        importBtn.disabled = false;
+        importBtn.textContent = 'UPLOAD ITEM DATA';
+    }
+}
 
         checkLogin();
     </script>
