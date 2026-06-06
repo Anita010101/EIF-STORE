@@ -244,6 +244,20 @@
         .guide-box h3 { margin-bottom: 8px; }
         .guide-box p { margin-bottom: 4px; }
         .guide-box .small { color: #666; margin-top: 8px; font-size: 13px; }
+        /* ===== FOOTER STYLE ===== */
+.app-footer {
+    text-align: center;
+    padding: 1.5rem;
+    background: white;
+    border-top: 1px solid #eee;
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: auto; /* Pushes it to the bottom */
+}
+.app-footer strong {
+    color: #4e73df; /* This makes your name blue */
+}
+
     </style>
 </head>
 <body>
@@ -416,6 +430,16 @@
                 <h3>📋 Paste from Excel</h3>
                 <textarea id="importData" style="width:100%;height:150px;padding:10px;border:1px solid #ddd;border-radius:6px;font-family:monospace;" placeholder="Copy from Excel and paste here (Column A = Item Name, Column B = Qty)"></textarea>
                 <button class="btn-success" onclick="processImport()" style="width:100%;margin-top:8px;">📥 IMPORT PASTED DATA</button>
+            <!-- ===== FOOTER SECTION ===== -->
+<div class="app-footer">
+    <div>
+        © 2026 <b>ENGINEERING INDUSTRIES FACTORY</b>. All Rights Reserved.
+    </div>
+    <div style="margin-top: 5px;">
+        Developed by <strong>RAJU TAMANG</strong>
+    </div>
+</div>
+
             </div>
         </div>
 
