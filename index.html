@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIF STORE - Engineering Industries Factory</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 16px; min-height: 100vh; }
@@ -63,6 +65,7 @@
         .footer-copy { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; }
         .footer-dev { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 4px; }
         .footer-dev strong { color: #f0c040; }
+   
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -327,59 +330,43 @@ async function loadMovement() { /* similar to before */ }
 async function loadHistory() { /* similar to before */ }
 
 async function importFromFile() {
-    const file = document.getElementById('excelFile').files[0];
-    if (!file) return alert('Select a file');
-    const btn = document.getElementById('uploadBtn');
-    btn.textContent = '⏳ Reading...';
-    btn.disabled = true;
-    const text = await file.text();
-    const store = document.getElementById('importStore').value;
-    const items = parseData(text, store, true);
-    if (items.length === 0) { alert('No valid data'); btn.textContent = '📤 UPLOAD & IMPORT FILE'; btn.disabled = false; return; }
-    await fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'importOpening', items: items }) });
-    alert('Imported ' + items.length + ' items');
-    btn.textContent = '📤 UPLOAD & IMPORT FILE';
-    btn.disabled = false;
-}
-
-async function importFromFile() {
     const fileInput = document.getElementById('excelFile');
     const file = fileInput.files[0];
-    if (!file) return alert('Please select a file');
+    if (!file) return alert('❌ Please select an Excel file first.');
 
     const btn = document.getElementById('uploadBtn');
     btn.textContent = '⏳ Reading...';
     btn.disabled = true;
 
     try {
-        // Read Excel file as binary
         const data = await file.arrayBuffer();
+        
+        // This line requires the library from Step 1
         const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convert Excel to JSON (Header: 1 means it returns an array of arrays)
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-        // Get first sheet
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-
-        // Skip header row and parse data
+        const store = document.getElementById('importStore').value;
         const items = [];
-        for (let i = 1; i < jsonData.length; i++) {
-            const row = jsonData[i];
-            if (!row[0] || !row[1]) continue; // Skip empty rows
 
-            const itemName = row[0].toString().trim();
+        // Loop through rows (starting from i=1 to skip the header)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length < 2) continue; // Skip empty rows
+
+            const name = row[0] ? row[0].toString().trim() : "";
             const qty = parseFloat(row[1]);
 
-            if (itemName && !isNaN(qty)) {
-                items.push({
-                    store: document.getElementById('importStore').value,
-                    itemName: itemName,
-                    qty: qty
-                });
+            if (name && !isNaN(qty)) {
+                items.push({ store: store, itemName: name, qty: qty });
             }
         }
 
         if (items.length === 0) {
-            alert('No valid data found');
+            alert('❌ No valid data found. Make sure Column A is Item Name and Column B is Quantity.');
             btn.textContent = '📤 UPLOAD & IMPORT FILE';
             btn.disabled = false;
             return;
@@ -393,19 +380,23 @@ async function importFromFile() {
         });
 
         const result = await response.json();
+        
         if (result.status === 'success') {
-            alert(`✅ Imported ${items.length} items!`);
-            document.getElementById('excelFile').value = '';
+            alert('✅ Success! ' + items.length + ' items imported to Opening Stock.');
+            fileInput.value = ''; // Clear file input
         } else {
-            alert(`❌ Error: ${result.message || 'Failed to import'}`);
+            alert('❌ Server Error: ' + result.message);
         }
-    } catch (error) {
-        alert(`❌ Error: ${error.message}`);
+
+    } catch (e) {
+        console.error(e);
+        alert('❌ Error reading file: ' + e.message + '\n\nMake sure you added the script tag from Step 1.');
     } finally {
         btn.textContent = '📤 UPLOAD & IMPORT FILE';
         btn.disabled = false;
     }
 }
+
 
 function exportCSV(tab) { /* same as before */ }
 
