@@ -254,7 +254,14 @@
         <div id="loginError"></div>
         <input type="password" id="passwordInput" placeholder="Enter Password" onkeypress="if(event.key==='Enter') login()">
         <button onclick="login()">🔓 Login</button>
-        
+        /* Screen Management */
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* Login should override everything */
+#loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
+#appScreen { position: relative; }
+
     </div>
         <!-- ===== FOOTER ===== -->
     <div class="app-footer">
