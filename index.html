@@ -128,33 +128,35 @@
         <div class="card" id="tab-stock">
             <div class="top-row"><h2>📊 Live Stock Balance</h2><button class="btn-export" onclick="exportCSV('stock')">📥 Export</button></div>
             <div class="filter-row">
-                <select id="stockStore" onchange="loadStock()"><option value="">All Stores</option></select>
-                <input type="text" id="stockSearch" placeholder="🔍 Search item..." oninput="loadStock()">
-            </div>
-            <div id="stockSummary" class="summary-row"></div>
-            <div id="stockContent"><div class="loading">⚙️ Loading stock...</div></div>
-        </div>
+                <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+    <select id="stockStoreFilter" onchange="renderStock()" style="min-width:150px;padding:6px;border-radius:6px;"></select>
+    <input type="text" id="stockSearch" placeholder="🔍 Search item..." oninput="renderStock()" style="flex:1;padding:6px;border-radius:6px;border:1px solid #ccc;">
+</div>
+<div id="stockContent">⚙️ Loading...</div>
+
 
         <!-- MOVEMENT TAB -->
         <div class="card" id="tab-movement">
             <div class="top-row"><h2>📈 Monthly Movement</h2><button class="btn-export" onclick="exportCSV('movement')">📥 Export</button></div>
             <div class="filter-row">
-                <select id="movMonth" onchange="loadMovement()"></select>
-                <select id="movYear" onchange="loadMovement()"></select>
-                <select id="movStore" onchange="loadMovement()"><option value="">All Stores</option></select>
-            </div>
-            <div id="movementContent"><div class="loading">⚙️ Loading...</div></div>
-        </div>
+               <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+    <select id="movementYear" onchange="renderMovement()" style="min-width:110px;padding:6px;border-radius:6px;"></select>
+    <select id="movementMonth" onchange="renderMovement()" style="min-width:140px;padding:6px;border-radius:6px;"></select>
+    <select id="movementStoreFilter" onchange="renderMovement()" style="min-width:150px;padding:6px;border-radius:6px;"></select>
+</div>
+<div id="movementContent">⚙️ Loading...</div>
+
 
         <!-- HISTORY TAB -->
         <div class="card" id="tab-history">
             <div class="top-row"><h2>📜 Transaction History</h2><button class="btn-export" onclick="exportCSV('history')">📥 Export</button></div>
             <div class="filter-row">
-                <select id="histStore" onchange="loadHistory()"><option value="">All Stores</option></select>
-                <input type="text" id="histSearch" placeholder="🔍 Search item..." oninput="loadHistory()">
-            </div>
-            <div id="historyContent"><div class="loading">⚙️ Loading...</div></div>
-        </div>
+                <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+    <select id="historyStoreFilter" onchange="renderHistory()" style="min-width:150px;padding:6px;border-radius:6px;"></select>
+    <input type="text" id="historySearch" placeholder="🔍 Search item..." oninput="renderHistory()" style="flex:1;padding:6px;border-radius:6px;border:1px solid #ccc;">
+</div>
+<div id="historyContent">⚙️ Loading...</div>
+
 
         <!-- IMPORT TAB -->
         <div class="card" id="tab-import">
@@ -186,25 +188,29 @@
 </div>
 
 <script>
-// 1. CONFIGURATION
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxNf0PwKfyYFkYzdvqSIohSkCh1vlN7zDePAp9X-GmUmywtrx0O3YOm7PUKWLXi1yIpyA/exec';
+// ============================================================
+// CONFIG — keep your own scriptURL
+// ============================================================
+const scriptURL = 'https://script.google.com/macros/s/AKfycbz_bHOhQ0sNm2TlexjL84S-g8YSeF0ZX5UwoEg2ypff-s9-nmnvEtmK6EqWT778rqjRdg/exec';
 
 const USERS = {
-    master: { password: 'EIF2026', store: null, label: '👑 Master Admin' },
-    store1: { password: 'STORE1', store: 'Store 1', label: '🏪 Store 1' },
-    store2: { password: 'STORE2', store: 'Store 2', label: '🏪 Store 2' },
-    store3: { password: 'STORE3', store: 'Store 3', label: '🏪 Store 3' }
+    master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
+    store1: { password: 'STORE1',   store: 'Store 1', label: '🏪 Store 1' },
+    store2: { password: 'STORE2',   store: 'Store 2', label: '🏪 Store 2' },
+    store3: { password: 'STORE3',   store: 'Store 3', label: '🏪 Store 3' }
 };
 
-let currentUser = null;
+let currentUser   = null;
+let allStockData   = [];
+let allHistoryData = [];
 
-// 2. LOGIN SYSTEM
+// ============================================================
+// LOGIN
+// ============================================================
 function login() {
     const pwd = document.getElementById('passwordInput').value.trim().toUpperCase();
     let found = null;
-    for (let key in USERS) { 
-        if (USERS[key].password === pwd) { found = USERS[key]; break; } 
-    }
+    for (let k in USERS) { if (USERS[k].password === pwd) { found = USERS[k]; break; } }
     if (found) {
         currentUser = found;
         localStorage.setItem('eifUser', JSON.stringify({ store: found.store }));
@@ -214,148 +220,307 @@ function login() {
     }
 }
 
-function logout() { 
-    localStorage.removeItem('eifUser'); 
-    location.reload(); 
-}
+function logout() { localStorage.removeItem('eifUser'); location.reload(); }
 
+// ============================================================
+// SHOW APP
+// ============================================================
 function showApp() {
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'block';
+    document.getElementById('appScreen').style.display   = 'block';
     document.getElementById('userBadge').textContent = currentUser.label;
-    
-    // Hide Import for non-master
-    document.getElementById('importNavBtn').style.display = (currentUser.store === null) ? 'block' : 'none';
 
-    const sel = document.getElementById('store');
-    if (currentUser.store) {
-        sel.innerHTML = `<option value="${currentUser.store}">${currentUser.store}</option>`;
-        sel.disabled = true;
-    } else {
-        sel.innerHTML = `<option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>`;
+    // Import nav button — master only
+    const importBtn = document.getElementById('importNavBtn');
+    if (importBtn) importBtn.style.display = currentUser.store === null ? 'inline-block' : 'none';
+
+    // Add-transaction store dropdown
+    const addStore = document.getElementById('store');
+    if (addStore) {
+        if (currentUser.store) {
+            addStore.innerHTML = `<option value="${currentUser.store}">${currentUser.store}</option>`;
+            addStore.disabled = true;
+        } else {
+            addStore.innerHTML = '<option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>';
+        }
     }
+
+    populateStoreDropdowns();
+    populateMonthYear();
     loadStock();
 }
 
-function showTab(tab, btn) {
-    if (tab === 'import' && currentUser.store !== null) return alert('Access Denied');
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    if (btn) btn.classList.add('active');
-    if (tab === 'stock') loadStock();
+// ============================================================
+// POPULATE STORE DROPDOWNS (Stock / History / Movement)
+// ============================================================
+function populateStoreDropdowns() {
+    const isMaster = currentUser.store === null;
+    const stores   = ['Store 1', 'Store 2', 'Store 3'];
+
+    ['stockStoreFilter', 'historyStoreFilter', 'movementStoreFilter'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = '';
+        if (isMaster) sel.innerHTML = '<option value="">All Stores</option>';
+        stores.forEach(s => {
+            if (isMaster || s === currentUser.store) {
+                sel.innerHTML += `<option value="${s}">${s}</option>`;
+            }
+        });
+        if (!isMaster) sel.value = currentUser.store;
+    });
 }
 
-// 3. EXCEL IMPORT FUNCTION (The one you need)
+// ============================================================
+// POPULATE MONTH / YEAR (Movement)
+// ============================================================
+function populateMonthYear() {
+    const yearSel  = document.getElementById('movementYear');
+    const monthSel = document.getElementById('movementMonth');
+    const now      = new Date();
+
+    if (yearSel) {
+        yearSel.innerHTML = '<option value="">All Years</option>';
+        for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) {
+            yearSel.innerHTML += `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`;
+        }
+    }
+
+    if (monthSel) {
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        monthSel.innerHTML = '<option value="">All Months</option>';
+        months.forEach((m, i) => {
+            monthSel.innerHTML += `<option value="${i+1}" ${(i+1) === now.getMonth()+1 ? 'selected' : ''}>${m}</option>`;
+        });
+    }
+}
+
+// ============================================================
+// SHOW TAB
+// ============================================================
+function showTab(tab, btn) {
+    if (tab === 'import' && currentUser && currentUser.store !== null) return alert('⛔ Access Denied');
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById('tab-' + tab);
+    if (el) el.classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (tab === 'stock')    loadStock();
+    if (tab === 'history')  loadHistory();
+    if (tab === 'movement') loadMovement();
+}
+
+// ============================================================
+// STOCK TAB
+// ============================================================
+async function loadStock() {
+    const div = document.getElementById('stockContent');
+    if (!div) return;
+    div.innerHTML = '⚙️ Loading...';
+    try {
+        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
+        allStockData = await r.json();
+        renderStock();
+    } catch (e) { div.innerHTML = '❌ Load failed: ' + e.message; }
+}
+
+function renderStock() {
+    const div         = document.getElementById('stockContent');
+    const storeFilter = document.getElementById('stockStoreFilter')?.value || '';
+    const search      = (document.getElementById('stockSearch')?.value || '').toLowerCase();
+
+    let rows = allStockData;
+    if (currentUser.store)   rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter)    rows = rows.filter(d => d.store === storeFilter);
+    if (search)              rows = rows.filter(d => (d.itemName||'').toLowerCase().includes(search));
+
+    if (!rows.length) { div.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">No records found</p>'; return; }
+
+    let html = `<table><thead><tr><th>Store</th><th>Item</th><th>Balance</th></tr></thead><tbody>`;
+    rows.forEach(d => {
+        const bal   = parseFloat(d.qty) || 0;
+        const color = bal < 0 ? 'color:red;font-weight:bold;' : bal === 0 ? 'color:orange;font-weight:bold;' : 'color:green;font-weight:bold;';
+        html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td style="${color}">${bal}</td></tr>`;
+    });
+    div.innerHTML = html + '</tbody></table>';
+}
+
+// ============================================================
+// HISTORY TAB
+// ============================================================
+async function loadHistory() {
+    const div = document.getElementById('historyContent');
+    if (!div) return;
+    div.innerHTML = '⚙️ Loading...';
+    try {
+        const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
+        allHistoryData = await r.json();
+        renderHistory();
+    } catch (e) { div.innerHTML = '❌ Load failed: ' + e.message; }
+}
+
+function renderHistory() {
+    const div         = document.getElementById('historyContent');
+    const storeFilter = document.getElementById('historyStoreFilter')?.value || '';
+    const search      = (document.getElementById('historySearch')?.value || '').toLowerCase();
+
+    let rows = allHistoryData;
+    if (currentUser.store)   rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter)    rows = rows.filter(d => d.store === storeFilter);
+    if (search)              rows = rows.filter(d => (d.itemName||'').toLowerCase().includes(search));
+
+    if (!rows.length) { div.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">No records found</p>'; return; }
+
+    let html = `<table><thead><tr><th>Date</th><th>Store</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No</th></tr></thead><tbody>`;
+    rows.forEach(d => {
+        const typeStyle = d.type === 'IN' ? 'color:green;font-weight:bold;' : 'color:red;font-weight:bold;';
+        html += `<tr>
+            <td>${d.date||''}</td>
+            <td>${d.store||''}</td>
+            <td>${d.itemName||''}</td>
+            <td>${d.qty||''}</td>
+            <td style="${typeStyle}">${d.type||''}</td>
+            <td>${d.dcNo||''}</td>
+        </tr>`;
+    });
+    div.innerHTML = html + '</tbody></table>';
+}
+
+// ============================================================
+// MOVEMENT TAB
+// ============================================================
+async function loadMovement() {
+    const div = document.getElementById('movementContent');
+    if (!div) return;
+    div.innerHTML = '⚙️ Loading...';
+    try {
+        const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
+        allHistoryData = await r.json();
+        renderMovement();
+    } catch (e) { div.innerHTML = '❌ Load failed: ' + e.message; }
+}
+
+function renderMovement() {
+    const div         = document.getElementById('movementContent');
+    const storeFilter = document.getElementById('movementStoreFilter')?.value || '';
+    const yearFilter  = document.getElementById('movementYear')?.value  || '';
+    const monthFilter = document.getElementById('movementMonth')?.value || '';
+
+    let rows = allHistoryData;
+    if (currentUser.store)   rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter)    rows = rows.filter(d => d.store === storeFilter);
+
+    if (yearFilter)  rows = rows.filter(d => { const dt = new Date(d.date); return !isNaN(dt) && dt.getFullYear()  == yearFilter; });
+    if (monthFilter) rows = rows.filter(d => { const dt = new Date(d.date); return !isNaN(dt) && (dt.getMonth()+1) == monthFilter; });
+
+    // Group by Store + Item
+    const groups = {};
+    rows.forEach(d => {
+        const key = `${d.store}||${d.itemName}`;
+        if (!groups[key]) groups[key] = { store: d.store, itemName: d.itemName, inQty: 0, outQty: 0 };
+        if (d.type === 'IN')  groups[key].inQty  += parseFloat(d.qty) || 0;
+        if (d.type === 'OUT') groups[key].outQty += parseFloat(d.qty) || 0;
+    });
+
+    const result = Object.values(groups);
+    if (!result.length) { div.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">No movement data found</p>'; return; }
+
+    let html = `<table><thead><tr><th>Store</th><th>Item</th><th>Total IN</th><th>Total OUT</th><th>Net</th></tr></thead><tbody>`;
+    result.forEach(d => {
+        const net      = d.inQty - d.outQty;
+        const netStyle = net >= 0 ? 'color:green;font-weight:bold;' : 'color:red;font-weight:bold;';
+        html += `<tr>
+            <td>${d.store}</td>
+            <td>${d.itemName}</td>
+            <td style="color:green;">+${d.inQty}</td>
+            <td style="color:red;">-${d.outQty}</td>
+            <td style="${netStyle}">${net >= 0 ? '+' : ''}${net}</td>
+        </tr>`;
+    });
+    div.innerHTML = html + '</tbody></table>';
+}
+
+// ============================================================
+// IMPORT FROM FILE
+// ============================================================
 async function importFromFile() {
     const fileInput = document.getElementById('excelFile');
-    const file = fileInput.files[0];
-    if (!file) return alert('Please select an Excel file first');
+    const file      = fileInput.files[0];
+    if (!file) return alert('⚠️ Please select an Excel file first');
 
     const btn = document.getElementById('uploadBtn');
     btn.textContent = '⏳ Processing...';
     btn.disabled = true;
 
     try {
-        const data = await file.arrayBuffer();
+        const data     = await file.arrayBuffer();
         const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+        const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+        const rows     = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        const store    = document.getElementById('importStore').value;
+        const items    = [];
 
-        const store = document.getElementById('importStore').value;
-        const items = [];
-
-        // Skip header row (i=1)
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            if (row[0]) {
-                items.push({
-                    store: store,
-                    itemName: row[0].toString().trim(),
-                    qty: parseFloat(row[1]) || 0
-                });
-            }
+            if (row[0]) items.push({ store, itemName: row[0].toString().trim(), qty: parseFloat(row[1]) || 0 });
         }
 
-        if (items.length === 0) throw new Error("No data found in sheet");
+        if (!items.length) throw new Error('No data found in sheet');
 
-        const response = await fetch(scriptURL, {
-            method: 'POST',
+        const res = await fetch(scriptURL, {
+            method:  'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'importOpening', items: items })
+            body:    JSON.stringify({ action: 'importOpening', items })
         });
-
-        const res = await response.json();
-        if (res.status === 'success') {
-            alert('✅ Success! Imported ' + items.length + ' items.');
-            fileInput.value = ''; // clear input
-        } else {
-            throw new Error(res.message || "Server Error");
-        }
+        const result = await res.json();
+        if (result.status === 'success') {
+            alert(`✅ Imported ${items.length} items for ${store}`);
+            fileInput.value = '';
+        } else throw new Error(result.message || 'Server error');
     } catch (e) {
         alert('❌ Error: ' + e.message);
-        console.error(e);
     } finally {
         btn.textContent = '📤 UPLOAD & IMPORT FILE';
         btn.disabled = false;
     }
 }
 
-// 4. PASTE IMPORT FUNCTION
+// ============================================================
+// PASTE IMPORT
+// ============================================================
 async function processImport() {
     const txt = document.getElementById('importData').value.trim();
     if (!txt) return alert('Paste data first');
-    
     const store = document.getElementById('importStore').value;
-    const lines = txt.split('\n');
-    const items = lines.map(line => {
-        const parts = line.split('\t');
-        return { store: store, itemName: parts[0].trim(), qty: parseFloat(parts[1]) || 0 };
+    const items = txt.split('\n').filter(l => l.trim()).map(line => {
+        const p = line.split('\t');
+        return { store, itemName: (p[0]||'').trim(), qty: parseFloat(p[1]) || 0 };
     });
-
     try {
-        const response = await fetch(scriptURL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-            body: JSON.stringify({ action: 'importOpening', items: items }) 
+        await fetch(scriptURL, {
+            method:  'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body:    JSON.stringify({ action: 'importOpening', items })
         });
-        alert('✅ Imported ' + items.length + ' items');
+        alert(`✅ Imported ${items.length} items for ${store}`);
         document.getElementById('importData').value = '';
-    } catch (e) {
-        alert('❌ Error sending data');
-    }
+    } catch (e) { alert('❌ Error: ' + e.message); }
 }
 
-// 5. LOAD STOCK DATA
-async function loadStock() {
-    const div = document.getElementById('stockContent');
-    if(!div) return;
-    div.innerHTML = '⚙️ Loading...';
+// ============================================================
+// AUTO LOGIN
+// ============================================================
+const _saved = localStorage.getItem('eifUser');
+if (_saved) {
     try {
-        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
-        const data = await r.json();
-        let filtered = data;
-        if (currentUser && currentUser.store) filtered = filtered.filter(d => d.store === currentUser.store);
-
-        let html = '<table><tr><th>Store</th><th>Item</th><th>Balance</th></tr>';
-        filtered.forEach(d => {
-            html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td>${d.qty}</td></tr>`;
-        });
-        div.innerHTML = html + '</table>';
-    } catch (e) {
-        div.innerHTML = '❌ Load failed';
-    }
-}
-
-// Auto-Login
-const saved = localStorage.getItem('eifUser');
-if (saved) {
-    const d = JSON.parse(saved);
-    for (let k in USERS) { 
-        if (USERS[k].store === d.store) { currentUser = USERS[k]; showApp(); break; } 
-    }
+        const d = JSON.parse(_saved);
+        for (let k in USERS) {
+            if (USERS[k].store === d.store) { currentUser = USERS[k]; showApp(); break; }
+        }
+    } catch (e) { localStorage.removeItem('eifUser'); }
 }
 </script>
+
 
 
 </body>
