@@ -3,208 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EIF STORE - Engineering Industries Factory</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-
+    <title>EIF Inventory Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 16px; min-height: 100vh; }
-        .container { max-width: 500px; margin: 0 auto; }
-        .login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; }
-        .login-box { background: #fff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
-        .login-logo { font-size: 48px; text-align: center; margin-bottom: 16px; }
-        .login-title { font-size: 20px; font-weight: 700; color: #1a1a2e; text-align: center; }
-        .login-subtitle { font-size: 12px; color: #999; text-align: center; margin-bottom: 24px; }
-        .login-input { width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; margin-bottom: 12px; text-align: center; letter-spacing: 2px; }
-        .login-btn { width: 100%; padding: 14px; background: #0f3460; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
-        .login-error { color: #dc3545; font-size: 13px; text-align: center; margin-top: 8px; }
-        .app-screen { display: none; }
-        .header { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .header-emoji { font-size: 28px; }
-        .header-text { flex: 1; }
-        .header-title { font-size: 15px; font-weight: 700; color: #1a1a2e; }
-        .header-subtitle { font-size: 11px; color: #999; }
-        .store-badge { background: #0f3460; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .logout-btn { padding: 8px 16px; background: #dc3545; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .nav { display: flex; gap: 4px; margin-bottom: 12px; background: #fff; border-radius: 10px; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); overflow-x: auto; }
-        .nav button { flex: 1; padding: 10px 4px; border: none; border-radius: 8px; background: transparent; font-size: 11px; font-weight: 600; color: #666; cursor: pointer; white-space: nowrap; }
-        .nav button.active { background: #0f3460; color: #fff; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: none; margin-bottom: 16px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        /* LOGIN SCREEN */
+        #loginScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-box h1 { color: #333; margin-bottom: 8px; }
+        .login-box p { color: #666; margin-bottom: 24px; font-size: 14px; }
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .login-box button:hover { background: #764ba2; }
+        #loginError { color: red; margin-bottom: 12px; font-size: 14px; }
+        
+        /* APP SCREEN */
+        #appScreen {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        #userBadge { 
+            display: inline-block;
+            background: rgba(255,255,255,0.3);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-right: 12px;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            border: 1px solid white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.5); }
+        
+        .nav {
+            background: white;
+            display: flex;
+            gap: 0;
+            padding: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 14px 16px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+        .nav-btn:hover { background: #f8f9fa; }
+        .nav-btn.active { color: #667eea; border-bottom-color: #667eea; }
+        
+        .container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .card {
+            display: none;
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
         .card.active { display: block; }
-        h2 { font-size: 16px; margin-bottom: 14px; color: #1a1a2e; }
-        label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; display: block; }
-        .form-group { margin-bottom: 12px; }
-        input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-        .btn-primary { width: 100%; padding: 14px; background: #0f3460; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px; }
-        .btn-success { width: 100%; padding: 13px; background: #28a745; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px; }
-        .btn-export { padding: 8px 14px; background: #17a2b8; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .table-wrap { overflow-x: auto; margin-top: 8px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background: #0f3460; color: #fff; padding: 9px 8px; text-align: left; }
-        td { padding: 8px; border-bottom: 1px solid #eee; }
-        .qty-pos { color: #155724; font-weight: 700; }
-        .qty-neg { color: #721c24; font-weight: 700; }
-        .qty-zero { color: #856404; font-weight: 700; }
-        .filter-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-        .filter-row select, .filter-row input { flex: 1; min-width: 100px; }
-        .-section { border: 2px dashed #c0ccdd; border-radius: 10px; padding: 16px; margin-bottom: 14px; background: #f8f9ff; }
-        .-file-input { width: 100%; padding: 10px; border: 2px dashed #0f3460; border-radius: 8px; background: #fff; font-size: 13px; cursor: pointer; margin-bottom: 8px; }
-        .divider { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+        .card h2 { color: #333; margin-bottom: 20px; font-size: 24px; }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .btn-primary, .btn-success {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .btn-primary { background: #0d6efd; color: white; }
+        .btn-primary:hover { background: #0b5ed7; }
+        .btn-success { background: #198754; color: white; }
+        .btn-success:hover { background: #157347; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        thead { background: #f8f9fa; }
+        th { padding: 12px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #ddd; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f8f9fa; }
+        
+        .import-section { margin: 20px 0; padding: 16px; background: #f8f9fa; border-radius: 6px; }
+        .import-file-input { padding: 12px; margin-bottom: 12px; }
+        .divider { display: flex; align-items: center; margin: 24px 0; gap: 12px; }
         .divider hr { flex: 1; border: none; border-top: 1px solid #ddd; }
-        .divider span { font-size: 12px; color: #999; font-weight: 600; }
-        .loading { text-align: center; padding: 24px; color: #888; font-size: 14px; }
-        .summary-row { display: flex; gap: 8px; margin-bottom: 12px; }
-        .sum-card { flex: 1; background: #f0f4ff; border-radius: 10px; padding: 10px; text-align: center; border-left: 3px solid #0f3460; }
-        .sum-card .num { font-size: 20px; font-weight: 700; color: #0f3460; }
-        .sum-card .lbl { font-size: 10px; color: #888; margin-top: 2px; }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .msg-success { color: #155724; background: #d4edda; padding: 10px; border-radius: 8px; font-size: 13px; text-align: center; font-weight: 600; }
-        .msg-error { color: #721c24; background: #f8d7da; padding: 10px; border-radius: 8px; font-size: 13px; text-align: center; font-weight: 600; }
-        .footer { text-align: center; padding: 20px 10px 10px 10px; border-top: 1px solid rgba(255,255,255,0.15); margin-top: 10px; }
-        .footer-copy { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; }
-        .footer-dev { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 4px; }
-        .footer-dev strong { color: #f0c040; }
-   
+        .divider span { color: #999; font-weight: 500; }
+        
+        textarea { resize: vertical; }
     </style>
-    < src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></>
-
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="login-screen">
+<!-- ========== LOGIN SCREEN ========== -->
+<div id="loginScreen" class="screen active">
     <div class="login-box">
-        <div class="login-logo">🏭</div>
-        <div class="login-title">ENGINEERING INDUSTRIES FACTORY</div>
-        <div class="login-subtitle">Inventory Management System</div>
-        <input type="password" id="passwordInput" class="login-input" placeholder="Enter Password" autocomplete="off" onkeypress="if(event.key==='Enter') login()">
-        <button class="login-btn" onclick="login()">🔐 LOGIN</button>
-        <div id="loginError" class="login-error"></div>
+        <h1>🔐 EIF Inventory</h1>
+        <p>ENGINEERING INDUSTRIES FACTORY</p>
+        <div id="loginError"></div>
+        <input type="password" id="passwordInput" placeholder="Enter Password" onkeypress="if(event.key==='Enter') login()">
+        <button onclick="login()">🔓 Login</button>
     </div>
 </div>
 
-<!-- APP SCREEN -->
-<div id="appScreen" class="app-screen">
+<!-- ========== APP SCREEN ========== -->
+<div id="appScreen" class="screen">
+    <!-- HEADER -->
     <div class="header">
-        <div class="header-row">
-            <div class="header-emoji">🏭</div>
-            <div class="header-text">
-                <div class="header-title">ENGINEERING INDUSTRIES FACTORY</div>
-                <div class="header-subtitle">Inventory Management System</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h1>📦 EIF Inventory Manager</h1>
+                <span id="userBadge"></span>
             </div>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span id="userBadge" class="store-badge">...</span>
-        </div>
     </div>
 
+    <!-- NAVIGATION -->
+    <div class="nav">
+        <button class="nav-btn active" onclick="showTab('stock', this)">📊 Live Balance</button>
+        <button class="nav-btn" onclick="showTab('history', this)">📜 History</button>
+        <button class="nav-btn" onclick="showTab('movement', this)">📈 Movement</button>
+        <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)">📥 Import</button>
+    </div>
+
+    <!-- CONTAINER -->
     <div class="container">
-       <div class="nav">
-    <button class="nav-btn active" onclick="showTab('add', this)">➕ Add</button>
-    <button class="nav-btn" onclick="showTab('stock', this)">📊 Stock</button>
-    <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)">📥 Import</button>
-    <button class="nav-btn" onclick="showTab('movement', this)">📈 Movement</button>
-    <button class="nav-btn" onclick="showTab('history', this)">📜 History</button>
-</div>
-
-
-        <!-- ADD TAB -->
-        <div class="card active" id="tab-add">
-            <h2>➕ Add Transaction</h2>
-            <div class="form-group"><label>Store *</label><select id="store"></select></div>
-            <div class="form-group"><label>Item Name *</label><input type="text" id="itemName" placeholder="Enter item name"></div>
-            <div class="form-group"><label>Quantity *</label><input type="number" id="qty" value="1" min="0"></div>
-            <div class="form-group"><label>DC No. *</label><input type="text" id="dcno" placeholder="e.g. DC-001"></div>
-            <div class="form-group"><label>Type *</label><select id="type"><option value="IN">⬆️ IN (Stock In)</option><option value="OUT">⬇️ OUT (Stock Out)</option></select></div>
-            <button class="btn-primary" id="submitBtn" onclick="sendData()">💾 SAVE</button>
-            <div id="message" style="margin-top:10px;"></div>
-        </div>
 
         <!-- STOCK TAB -->
-        <div class="card" id="tab-stock">
-            <div class="top-row"><h2>📊 Live Stock Balance</h2><button class="btn-export" onclick="exportCSV('stock')">📥 Export</button></div>
-            <div class="filter-row">
-                <select id="stockStore" onchange="loadStock()"><option value="">All Stores</option></select>
-                <input type="text" id="stockSearch" placeholder="🔍 Search item..." oninput="loadStock()">
+        <div class="card active" id="tab-stock">
+            <h2>📊 Live Stock Balance</h2>
+            
+            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                <select id="stockStoreFilter" onchange="renderStock()" 
+                    style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                </select>
+                <input type="text" id="stockSearch" placeholder="🔍 Search item..." 
+                    oninput="renderStock()" 
+                    style="flex:1;min-width:180px;padding:8px;border-radius:6px;border:1px solid #ddd;">
             </div>
-            <div id="stockSummary" class="summary-row"></div>
-            <div id="stockContent"><div class="loading">⚙️ Loading stock...</div></div>
-        </div>
 
-        <!-- MOVEMENT TAB -->
-        <div class="card" id="tab-movement">
-            <div class="top-row"><h2>📈 Monthly Movement</h2><button class="btn-export" onclick="exportCSV('movement')">📥 Export</button></div>
-            <div class="filter-row">
-                <select id="movMonth" onchange="loadMovement()"></select>
-                <select id="movYear" onchange="loadMovement()"></select>
-                <select id="movStore" onchange="loadMovement()"><option value="">All Stores</option></select>
-            </div>
-            <div id="movementContent"><div class="loading">⚙️ Loading...</div></div>
+            <div id="stockContent">⏳ Loading...</div>
         </div>
 
         <!-- HISTORY TAB -->
         <div class="card" id="tab-history">
-            <div class="top-row"><h2>📜 Transaction History</h2><button class="btn-export" onclick="exportCSV('history')">📥 Export</button></div>
-            <div class="filter-row">
-                <select id="histStore" onchange="loadHistory()"><option value="">All Stores</option></select>
-                <input type="text" id="histSearch" placeholder="🔍 Search item..." oninput="loadHistory()">
+            <h2>📜 Transaction History</h2>
+            
+            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                <select id="historyStoreFilter" onchange="renderHistory()" 
+                    style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                </select>
+                <input type="text" id="historySearch" placeholder="🔍 Search item..." 
+                    oninput="renderHistory()" 
+                    style="flex:1;min-width:180px;padding:8px;border-radius:6px;border:1px solid #ddd;">
             </div>
-            <div id="historyContent"><div class="loading">⚙️ Loading...</div></div>
+
+            <div id="historyContent">⏳ Loading...</div>
+        </div>
+
+        <!-- MOVEMENT TAB -->
+        <div class="card" id="tab-movement">
+            <h2>📈 Stock Movement</h2>
+            
+            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                <select id="movementYear" onchange="renderMovement()" 
+                    style="min-width:110px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                </select>
+                <select id="movementMonth" onchange="renderMovement()" 
+                    style="min-width:140px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                </select>
+                <select id="movementStoreFilter" onchange="renderMovement()" 
+                    style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                </select>
+            </div>
+
+            <div id="movementContent">⏳ Loading...</div>
         </div>
 
         <!-- IMPORT TAB -->
         <div class="card" id="tab-import">
             <h2>📥 Import Opening Stock</h2>
-            <div class="form-group"><label>Select Store *</label><select id="importStore"><option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option></select></div>
             
-            <div class="import-section">
-                <h3>📁 Upload Excel / CSV File</h3>
-                <input type="file" id="excelFile" class="import-file-input" accept=".xlsx,.xls,.csv">
-                <button class="btn-success" id="uploadBtn" onclick="importFromFile()"
->📤 UPLOAD & IMPORT FILE</button>
+            <div class="form-group">
+                <label>📍 Select Store *</label>
+                <select id="importStore" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
+                    <option value="Store 1">Store 1</option>
+                    <option value="Store 2">Store 2</option>
+                    <option value="Store 3">Store 3</option>
+                </select>
             </div>
-            
+
+            <div class="import-section">
+                <h3>📁 Upload Excel / CSV</h3>
+                <input type="file" id="excelFile" class="import-file-input" accept=".xlsx,.xls,.csv">
+                <button class="btn-success" id="uploadBtn" onclick="importFromFile()" style="width:100%;">📤 UPLOAD & IMPORT</button>
+            </div>
+
             <div class="divider"><hr><span>OR</span><hr></div>
-            
+
             <div class="import-section">
                 <h3>📋 Paste from Excel</h3>
-                <textarea id="importData" style="height:150px;margin-bottom:8px;" placeholder="Copy from Excel and paste here"></textarea>
-                <button class="btn-success" id="pasteBtn" onclick="processImport()">📥 IMPORT PASTED DATA</button>
+                <textarea id="importData" style="width:100%;height:150px;padding:10px;border:1px solid #ddd;border-radius:6px;font-family:monospace;" placeholder="Copy from Excel and paste here (Column A = Item Name, Column B = Qty)"></textarea>
+                <button class="btn-success" id="pasteBtn" onclick="processImport()" style="width:100%;margin-top:8px;">📥 IMPORT PASTED DATA</button>
             </div>
-            <div id="importMsg" style="margin-top:12px;"></div>
         </div>
-    </div>
 
-    <div class="footer">
-        <p class="footer-copy">&copy; 2026 ENGINEERING INDUSTRIES FACTORY</p>
-        <p class="footer-dev">Developed by <strong>RAJU TAMANG</strong></p>
     </div>
 </div>
 
+<!-- ========== JAVASCRIPT ========== -->
 <script>
-// 1. CONFIGURATION
-const scriptURL = 'https://script.google.com/macros/s/AKfycbx9xeIWO6C5NGn7OFeYqmAD7fnjwasSoW97l6zqewINaH74AFvI1WcdzlMSFiWNY6NJUQ/exec';
+// CONFIG
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzN5_6I6T7vktORzkbSlC2eD8oz6JJsyHFq51VEsOn7ojDapJMMeqe7PR6XGzOtg1hkCw/exec';
 
 const USERS = {
-    master: { password: 'EIF2026', store: null, label: '👑 Master Admin' },
-    store1: { password: 'STORE1', store: 'Store 1', label: '🏪 Store 1' },
-    store2: { password: 'STORE2', store: 'Store 2', label: '🏪 Store 2' },
-    store3: { password: 'STORE3', store: 'Store 3', label: '🏪 Store 3' }
+    master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
+    store1: { password: 'STORE1',   store: 'Store 1', label: '🏪 Store 1' },
+    store2: { password: 'STORE2',   store: 'Store 2', label: '🏪 Store 2' },
+    store3: { password: 'STORE3',   store: 'Store 3', label: '🏪 Store 3' }
 };
 
 let currentUser = null;
+let allStockData = [];
+let allHistoryData = [];
 
-// 2. LOGIN SYSTEM
+// ========== LOGIN ==========
 function login() {
     const pwd = document.getElementById('passwordInput').value.trim().toUpperCase();
     let found = null;
-    for (let key in USERS) { 
-        if (USERS[key].password === pwd) { found = USERS[key]; break; } 
-    }
+    for (let k in USERS) { if (USERS[k].password === pwd) { found = USERS[k]; break; } }
     if (found) {
         currentUser = found;
         localStorage.setItem('eifUser', JSON.stringify({ store: found.store }));
@@ -214,43 +328,197 @@ function login() {
     }
 }
 
-function logout() { 
-    localStorage.removeItem('eifUser'); 
-    location.reload(); 
-}
+function logout() { localStorage.removeItem('eifUser'); location.reload(); }
 
+// ========== SHOW APP ==========
 function showApp() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('userBadge').textContent = currentUser.label;
-    
-    // Hide Import for non-master
-    document.getElementById('importNavBtn').style.display = (currentUser.store === null) ? 'block' : 'none';
 
-    const sel = document.getElementById('store');
-    if (currentUser.store) {
-        sel.innerHTML = `<option value="${currentUser.store}">${currentUser.store}</option>`;
-        sel.disabled = true;
-    } else {
-        sel.innerHTML = `<option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>`;
-    }
+    // Import button - master only
+    const importBtn = document.getElementById('importNavBtn');
+    if (importBtn) importBtn.style.display = currentUser.store === null ? 'inline-block' : 'none';
+
+    populateStoreDropdowns();
+    populateMonthYear();
     loadStock();
 }
 
-function showTab(tab, btn) {
-    if (tab === 'import' && currentUser.store !== null) return alert('Access Denied');
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    if (btn) btn.classList.add('active');
-    if (tab === 'stock') loadStock();
+// ========== POPULATE DROPDOWNS ==========
+function populateStoreDropdowns() {
+    const isMaster = currentUser.store === null;
+    const stores = ['Store 1', 'Store 2', 'Store 3'];
+
+    ['stockStoreFilter', 'historyStoreFilter', 'movementStoreFilter'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = '';
+        if (isMaster) sel.innerHTML = '<option value="">All Stores</option>';
+        stores.forEach(s => {
+            if (isMaster || s === currentUser.store) {
+                sel.innerHTML += `<option value="${s}">${s}</option>`;
+            }
+        });
+        if (!isMaster) sel.value = currentUser.store;
+    });
 }
 
-// 3. EXCEL IMPORT FUNCTION (The one you need)
+function populateMonthYear() {
+    const yearSel = document.getElementById('movementYear');
+    const monthSel = document.getElementById('movementMonth');
+    const now = new Date();
+
+    if (yearSel) {
+        yearSel.innerHTML = '<option value="">All Years</option>';
+        for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) {
+            yearSel.innerHTML += `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`;
+        }
+    }
+
+    if (monthSel) {
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        monthSel.innerHTML = '<option value="">All Months</option>';
+        months.forEach((m, i) => {
+            monthSel.innerHTML += `<option value="${i+1}" ${(i+1) === now.getMonth()+1 ? 'selected' : ''}>${m}</option>`;
+        });
+    }
+}
+
+// ========== SHOW TAB ==========
+function showTab(tab, btn) {
+    if (tab === 'import' && currentUser && currentUser.store !== null) return alert('⛔ Access Denied');
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById('tab-' + tab);
+    if (el) el.classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (tab === 'stock') loadStock();
+    if (tab === 'history') loadHistory();
+    if (tab === 'movement') loadMovement();
+}
+
+// ========== LOAD STOCK ==========
+async function loadStock() {
+    const div = document.getElementById('stockContent');
+    if (!div) return;
+    div.innerHTML = '⏳ Loading stock data...';
+    try {
+        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
+        allStockData = await r.json();
+        renderStock();
+    } catch (e) { div.innerHTML = '❌ Error: ' + e.message; }
+}
+
+function renderStock() {
+    const div = document.getElementById('stockContent');
+    const storeFilter = document.getElementById('stockStoreFilter')?.value || '';
+    const search = (document.getElementById('stockSearch')?.value || '').toLowerCase();
+
+    let rows = allStockData;
+    if (currentUser.store) rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
+    if (search) rows = rows.filter(d => (d.itemName || '').toLowerCase().includes(search));
+
+    if (!rows.length) { div.innerHTML = '<p style="text-align:center;color:#999;padding:30px;">No records found</p>'; return; }
+
+    let html = '<table><thead><tr><th>Store</th><th>Item Name</th><th style="text-align:right;">Balance</th></tr></thead><tbody>';
+    rows.forEach(d => {
+        const bal = parseFloat(d.qty) || 0;
+        const color = bal < 0 ? 'red' : bal === 0 ? 'orange' : 'green';
+        html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td style="text-align:right;color:${color};font-weight:bold;">${bal}</td></tr>`;
+    });
+    div.innerHTML = html + '</tbody></table>';
+}
+
+// ========== LOAD HISTORY ==========
+async function loadHistory() {
+    const div = document.getElementById('historyContent');
+    if (!div) return;
+    div.innerHTML = '⏳ Loading history...';
+    try {
+        const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
+        allHistoryData = await r.json();
+        renderHistory();
+    } catch (e) { div.innerHTML = '❌ Error: ' + e.message; }
+}
+
+function renderHistory() {
+    const div = document.getElementById('historyContent');
+    const storeFilter = document.getElementById('historyStoreFilter')?.value || '';
+    const search = (document.getElementById('historySearch')?.value || '').toLowerCase();
+
+    let rows = allHistoryData;
+    if (currentUser.store) rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
+    if (search) rows = rows.filter(d => (d.itemName || '').toLowerCase().includes(search));
+
+    if (!rows.length) { div.innerHTML = '<p style="text-align:center;color:#999;padding:30px;">No records found</p>'; return; }
+
+    let html = '<table><thead><tr><th>Date</th><th>Store</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No</th></tr></thead><tbody>';
+    rows.forEach(d => {
+        const typeStyle = d.type === 'IN' ? 'color:green;font-weight:bold;' : 'color:red;font-weight:bold;';
+        html += `<tr><td>${d.date || ''}</td><td>${d.store || ''}</td><td>${d.itemName || ''}</td><td>${d.qty || ''}</td><td style="${typeStyle}">${d.type || ''}</td><td>${d.dcNo || ''}</td></tr>`;
+    });
+    div.innerHTML = html + '</tbody></table>';
+}
+
+// ========== LOAD MOVEMENT ==========
+async function loadMovement() {
+    const div = document.getElementById('movementContent');
+    if (!div) return;
+    div.innerHTML = '⏳ Loading movement...';
+    try {
+        const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
+        allHistoryData = await r.json();
+        renderMovement();
+    } catch (e) { div.innerHTML = '❌ Error: ' + e.message; }
+}
+
+function renderMovement() {
+    const div = document.getElementById('movementContent');
+    const storeFilter = document.getElementById('movementStoreFilter')?.value || '';
+    const yearFilter = document.getElementById('movementYear')?.value || '';
+    const monthFilter = document.getElementById('movementMonth')?.value || '';
+
+    let rows = allHistoryData;
+    if (currentUser.store) rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
+
+    if (yearFilter) rows = rows.filter(d => {
+        const dt = new Date(d.date);
+        return !isNaN(dt) && dt.getFullYear() == yearFilter;
+    });
+    if (monthFilter) rows = rows.filter(d => {
+        const dt = new Date(d.date);
+        return !isNaN(dt) && (dt.getMonth() + 1) == monthFilter;
+    });
+
+    const groups = {};
+    rows.forEach(d => {
+        const key = `${d.store}||${d.itemName}`;
+        if (!groups[key]) groups[key] = { store: d.store, itemName: d.itemName, inQty: 0, outQty: 0 };
+        if (d.type === 'IN') groups[key].inQty += parseFloat(d.qty) || 0;
+        if (d.type === 'OUT') groups[key].outQty += parseFloat(d.qty) || 0;
+    });
+
+    const result = Object.values(groups);
+    if (!result.length) { div.innerHTML = '<p style="text-align:center;color:#999;padding:30px;">No movement data found</p>'; return; }
+
+    let html = '<table><thead><tr><th>Store</th><th>Item</th><th style="color:green;">IN</th><th style="color:red;">OUT</th><th>Net</th></tr></thead><tbody>';
+    result.forEach(d => {
+        const net = d.inQty - d.outQty;
+        const netStyle = net >= 0 ? 'color:green;font-weight:bold;' : 'color:red;font-weight:bold;';
+        html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td style="color:green;">+${d.inQty}</td><td style="color:red;">-${d.outQty}</td><td style="${netStyle}">${net >= 0 ? '+' : ''}${net}</td></tr>`;
+    });
+    div.innerHTML = html + '</tbody></table>';
+}
+
+// ========== IMPORT FROM FILE ==========
 async function importFromFile() {
     const fileInput = document.getElementById('excelFile');
     const file = fileInput.files[0];
-    if (!file) return alert('Please select an Excel file first');
+    if (!file) return alert('⚠️ Select a file first');
 
     const btn = document.getElementById('uploadBtn');
     btn.textContent = '⏳ Processing...';
@@ -259,104 +527,76 @@ async function importFromFile() {
     try {
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
-
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
         const store = document.getElementById('importStore').value;
         const items = [];
 
-        // Skip header row (i=1)
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            if (row[0]) {
-                items.push({
-                    store: store,
-                    itemName: row[0].toString().trim(),
-                    qty: parseFloat(row[1]) || 0
-                });
-            }
+            if (row[0]) items.push({
+                store: store,
+                itemName: row[0].toString().trim(),
+                qty: parseFloat(row[1]) || 0
+            });
         }
 
-        if (items.length === 0) throw new Error("No data found in sheet");
+        if (!items.length) throw new Error('No data in sheet');
 
-        const response = await fetch(scriptURL, {
+        const res = await fetch(scriptURL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'importOpening', items: items })
         });
-
-        const res = await response.json();
-        if (res.status === 'success') {
-            alert('✅ Success! Imported ' + items.length + ' items.');
-            fileInput.value = ''; // clear input
-        } else {
-            throw new Error(res.message || "Server Error");
-        }
+        const result = await res.json();
+        if (result.status === 'success') {
+            alert(`✅ Imported ${items.length} items`);
+            fileInput.value = '';
+        } else throw new Error(result.message || 'Error');
     } catch (e) {
-        alert('❌ Error: ' + e.message);
-        console.error(e);
+        alert('❌ ' + e.message);
     } finally {
-        btn.textContent = '📤 UPLOAD & IMPORT FILE';
+        btn.textContent = '📤 UPLOAD & IMPORT';
         btn.disabled = false;
     }
 }
 
-// 4. PASTE IMPORT FUNCTION
+// ========== PASTE IMPORT ==========
 async function processImport() {
     const txt = document.getElementById('importData').value.trim();
     if (!txt) return alert('Paste data first');
-    
     const store = document.getElementById('importStore').value;
-    const lines = txt.split('\n');
-    const items = lines.map(line => {
-        const parts = line.split('\t');
-        return { store: store, itemName: parts[0].trim(), qty: parseFloat(parts[1]) || 0 };
-    });
+    const items = txt.split('\n').map(line => {
+        const p = line.split('\t');
+        return { store: store, itemName: (p[0] || '').trim(), qty: parseFloat(p[1]) || 0 };
+    }).filter(i => i.itemName);
 
     try {
-        const response = await fetch(scriptURL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-            body: JSON.stringify({ action: 'importOpening', items: items }) 
+        await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'importOpening', items: items })
         });
-        alert('✅ Imported ' + items.length + ' items');
+        alert(`✅ Imported ${items.length} items`);
         document.getElementById('importData').value = '';
-    } catch (e) {
-        alert('❌ Error sending data');
-    }
+    } catch (e) { alert('❌ Error'); }
 }
 
-// 5. LOAD STOCK DATA
-async function loadStock() {
-    const div = document.getElementById('stockContent');
-    if(!div) return;
-    div.innerHTML = '⚙️ Loading...';
+// ========== AUTO LOGIN ==========
+const _saved = localStorage.getItem('eifUser');
+if (_saved) {
     try {
-        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
-        const data = await r.json();
-        let filtered = data;
-        if (currentUser && currentUser.store) filtered = filtered.filter(d => d.store === currentUser.store);
-
-        let html = '<table><tr><th>Store</th><th>Item</th><th>Balance</th></tr>';
-        filtered.forEach(d => {
-            html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td>${d.qty}</td></tr>`;
-        });
-        div.innerHTML = html + '</table>';
-    } catch (e) {
-        div.innerHTML = '❌ Load failed';
-    }
-}
-
-// Auto-Login
-const saved = localStorage.getItem('eifUser');
-if (saved) {
-    const d = JSON.parse(saved);
-    for (let k in USERS) { 
-        if (USERS[k].store === d.store) { currentUser = USERS[k]; showApp(); break; } 
-    }
+        const d = JSON.parse(_saved);
+        for (let k in USERS) {
+            if (USERS[k].store === d.store) {
+                currentUser = USERS[k];
+                showApp();
+                break;
+            }
+        }
+    } catch (e) { localStorage.removeItem('eifUser'); }
 }
 </script>
-
 
 </body>
 </html>
