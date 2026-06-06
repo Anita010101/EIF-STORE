@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIF Inventory Manager</title>
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --primary: #667eea;
@@ -16,92 +15,522 @@
             --light: #f8f9fa;
             --dark: #343a40;
             --border-radius: 8px;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --transition: all 0.2s ease;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        
-        body { background-color: #f5f5f5; min-height: 100vh; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-        /* Screen Management */
-        .screen { display: none; }
-        .screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
 
-        /* Login Screen - Center Content */
-        #loginScreen.active { justify-content: center; align-items: center; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); }
-        
+        /* Login Screen */
+        #loginScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
         .login-box {
             background: white;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            width: 90%;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
             max-width: 400px;
             text-align: center;
         }
 
-        .login-box h1 { margin-bottom: 0.5rem; font-size: 1.8rem; color: var(--dark); }
-        .login-box p { margin-bottom: 1.5rem; font-size: 0.9rem; color: #666; }
-        .login-box input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
-        .login-box button { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 1rem; }
-        #loginError { color: var(--danger); margin-bottom: 1rem; font-size: 0.9rem; min-height: 1.2rem; }
+        .login-box h1 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
 
-        /* Header & Nav */
-        .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 1rem; box-shadow: var(--box-shadow); }
-        .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        #userBadge { background: rgba(255,255,255,0.2); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; }
-        
-        .logout-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        .login-box p {
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
 
-        .nav { background: white; display: flex; overflow-x: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .nav-btn { flex: 1; min-width: 110px; padding: 1rem; border: none; background: white; cursor: pointer; color: #666; font-weight: 500; border-bottom: 3px solid transparent; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-        .nav-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f0f4ff; }
+        .login-box input {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .login-box input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .login-box button:hover {
+            background: var(--primary-dark);
+        }
+
+        #loginError {
+            color: var(--danger);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* App Screen */
+        #appScreen {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        #userBadge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.3rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Navigation */
+        .nav {
+            background: white;
+            display: flex;
+            padding: 0;
+            box-shadow: var(--box-shadow);
+            overflow-x: auto;
+            position: sticky;
+            top: 60px;
+            z-index: 90;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #555;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            min-width: 120px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--light);
+        }
+
+        .nav-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .nav-btn i {
+            font-size: 1.1rem;
+        }
 
         /* Main Container */
-        .container { flex: 1; padding: 1.5rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
 
-        /* Cards / Tabs */
-        .card { display: none; background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--box-shadow); }
-        .card.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Cards */
+        .card {
+            display: none;
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1.5rem;
+        }
 
-        h2 { margin-bottom: 1.2rem; font-size: 1.4rem; color: var(--dark); display: flex; align-items: center; gap: 0.6rem; }
+        .card.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
 
-        /* Forms */
-        .form-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-        .form-group { flex: 1; min-width: 180px; margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.9rem; }
-        .form-group input, .form-group select, textarea { width: 100%; padding: 0.7rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; }
-        
-        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; transition: 0.2s; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-success:hover { opacity: 0.9; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card h2 {
+            color: var(--dark);
+            margin-bottom: 1.2rem;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h2 i {
+            font-size: 1.3rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.7rem 1.2rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
 
         /* Tables */
-        .table-wrap { overflow-x: auto; margin-top: 1rem; border: 1px solid #eee; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background: #f8f9fa; padding: 0.8rem; text-align: left; font-size: 0.9rem; border-bottom: 2px solid #eee; }
-        td { padding: 0.8rem; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        tr:hover { background: #fafaff; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
 
-        /* Alert */
-        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none; align-items: center; gap: 0.8rem; font-weight: 500; }
-        .alert.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; display: flex; }
-        .alert.error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; display: flex; }
+        thead {
+            background: var(--light);
+        }
 
-        .guide-box { margin-top: 1.5rem; padding: 1rem; background: #f0f7ff; border-radius: 8px; border-left: 4px solid var(--primary); font-size: 0.9rem; }
+        th {
+            padding: 0.8rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid #eee;
+        }
+
+        td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: rgba(102, 126, 234, 0.03);
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 0.8rem 1rem;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+            display: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .alert.success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            color: #155724;
+            display: flex;
+        }
+
+        .alert.error {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            color: #721c24;
+            display: flex;
+        }
+
+        .alert i {
+            font-size: 1.1rem;
+        }
+
+        /* Import Section */
+        .import-section {
+            margin: 1.5rem 0;
+            padding: 1.2rem;
+            background: var(--light);
+            border-radius: var(--border-radius);
+            border: 1px dashed #ddd;
+        }
+
+        .import-section h3 {
+            margin-bottom: 0.8rem;
+            color: var(--dark);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #excelFile {
+            width: 100%;
+            padding: 0.7rem;
+            margin-bottom: 0.8rem;
+            border: 1px dashed #ccc;
+            border-radius: var(--border-radius);
+            background: white;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            resize: vertical;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            gap: 1rem;
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Guide Box */
+        .guide-box {
+            margin-top: 1.5rem;
+            padding: 1.2rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary);
+        }
+
+        .guide-box h3 {
+            margin-bottom: 0.6rem;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .guide-box p {
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .guide-box .small {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.6rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+
+            .nav-btn {
+                flex: 1 0 45%;
+                margin: 0.3rem;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .login-box {
+                padding: 1.5rem;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 0.6rem;
+            }
+
+            .btn {
+                padding: 0.6rem;
+            }
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
     <div class="login-box">
-        <h1><i class="fas fa-industry"></i> EIF Inventory</h1>
+        <h1><i class="fas fa-lock"></i> EIF Inventory</h1>
         <p>ENGINEERING INDUSTRIES FACTORY</p>
         <div id="loginError"></div>
-        <input type="password" id="passwordInput" placeholder="Enter Master or Store Password">
-        <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Access System</button>
+        <input type="password" id="passwordInput" placeholder="Enter Password" onkeypress="if(event.key==='Enter') login()">
+        <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
     </div>
 </div>
 
@@ -110,124 +539,161 @@
     <div class="header">
         <div class="header-content">
             <div>
-                <h1>EIF Manager</h1>
+                <h1><i class="fas fa-boxes"></i> EIF Inventory Manager</h1>
                 <span id="userBadge"></span>
             </div>
-            <button class="logout-btn" onclick="logout()"><i class="fas fa-power-off"></i> Logout</button>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </div>
 
+    <!-- NAVIGATION -->
     <div class="nav">
-        <button class="nav-btn active" id="btn-stock" onclick="showTab('stock', this)"><i class="fas fa-list-ul"></i> Stock</button>
-        <button class="nav-btn" id="btn-add" onclick="showTab('add', this)"><i class="fas fa-plus-circle"></i> Add</button>
-        <button class="nav-btn" id="btn-history" onclick="showTab('history', this)"><i class="fas fa-history"></i> History</button>
-        <button class="nav-btn" id="btn-movement" onclick="showTab('movement', this)"><i class="fas fa-sync-alt"></i> Movement</button>
-        <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)" style="display:none;"><i class="fas fa-upload"></i> Import</button>
+        <button class="nav-btn active" onclick="showTab('stock', this)"><i class="fas fa-chart-pie"></i> Live Balance</button>
+        <button class="nav-btn" onclick="showTab('add', this)"><i class="fas fa-plus-circle"></i> Add Stock</button>
+        <button class="nav-btn" onclick="showTab('history', this)"><i class="fas fa-history"></i> History</button>
+        <button class="nav-btn" onclick="showTab('movement', this)"><i class="fas fa-chart-line"></i> Movement</button>
+        <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)"><i class="fas fa-file-import"></i> Import</button>
     </div>
 
     <div class="container">
-        <!-- Live Balance -->
+
+        <!-- STOCK TAB -->
         <div class="card active" id="tab-stock">
-            <h2><i class="fas fa-warehouse"></i> Current Stock Balance</h2>
-            <div class="form-row">
-                <select id="stockStoreFilter" onchange="renderStock()"></select>
-                <input type="text" id="stockSearch" placeholder="🔍 Search item name..." oninput="renderStock()">
+            <h2><i class="fas fa-chart-pie"></i> Live Stock Balance</h2>
+            <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                <select id="stockStoreFilter" onchange="renderStock()"
+                    style="min-width:150px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
+                </select>
+                <input type="text" id="stockSearch" placeholder="🔍 Search item..."
+                    oninput="renderStock()"
+                    style="flex:1;min-width:180px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
             </div>
-            <div id="stockContent">⏳ Syncing data...</div>
+            <div id="stockContent">⏳ Loading...</div>
         </div>
 
-        <!-- Add Transaction -->
+        <!-- ADD STOCK TAB -->
         <div class="card" id="tab-add">
-            <h2><i class="fas fa-plus-circle"></i> New Stock Entry</h2>
-            <div id="addResult" class="alert"></div>
+            <h2><i class="fas fa-plus-circle"></i> Add Stock Transaction</h2>
+            <div id="addResult"></div>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label>Store Location</label>
+                    <label><i class="fas fa-store"></i> Store *</label>
                     <select id="addStore">
+                        <option value="">Select Store</option>
                         <option value="Store 1">Store 1</option>
                         <option value="Store 2">Store 2</option>
                         <option value="Store 3">Store 3</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Action Type</label>
+                    <label><i class="fas fa-exchange-alt"></i> Type *</label>
                     <select id="addType">
-                        <option value="IN">📥 Stock IN</option>
-                        <option value="OUT">📤 Stock OUT</option>
+                        <option value="">Select Type</option>
+                        <option value="IN">📥 IN (Stock In)</option>
+                        <option value="OUT">📤 OUT (Stock Out)</option>
                     </select>
                 </div>
             </div>
+
             <div class="form-group">
-                <label>Item Name</label>
-                <input type="text" id="addItemName" placeholder="Type or select item" list="itemSuggestions">
+                <label><i class="fas fa-box"></i> Item Name *</label>
+                <input type="text" id="addItemName" placeholder="Enter item name" list="itemSuggestions">
                 <datalist id="itemSuggestions"></datalist>
             </div>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" id="addQty" placeholder="0.00">
+                    <label><i class="fas fa-sort-numeric-up"></i> Quantity *</label>
+                    <input type="number" id="addQty" placeholder="0" min="0" step="any">
                 </div>
                 <div class="form-group">
-                    <label>Reference (DC No.)</label>
-                    <input type="text" id="addDcNo" placeholder="Optional DC Number">
+                    <label><i class="fas fa-file-alt"></i> DC No.</label>
+                    <input type="text" id="addDcNo" placeholder="Optional">
                 </div>
             </div>
-            <button class="btn btn-success" onclick="addStock()"><i class="fas fa-save"></i> Save Transaction</button>
+
+            <button class="btn btn-success btn-block" onclick="addStock()">
+                <i class="fas fa-check-circle"></i> SUBMIT STOCK
+            </button>
+
             <div class="guide-box">
-                <b>💡 Tip:</b> Use "Stock IN" for new arrivals and "Stock OUT" for sales or transfers.
+                <h3><i class="fas fa-info-circle"></i> Quick Guide</h3>
+                <p><strong>IN</strong> = Stock coming into store (purchase, transfer in)</p>
+                <p><strong>OUT</strong> = Stock leaving store (sale, transfer out, wastage)</p>
+                <p class="small">✅ After submission, check Live Balance to see updated stock!</p>
             </div>
         </div>
 
-        <!-- History -->
+        <!-- HISTORY TAB -->
         <div class="card" id="tab-history">
-            <h2><i class="fas fa-history"></i> Transaction Log</h2>
-            <div class="form-row">
-                <select id="historyStoreFilter" onchange="renderHistory()"></select>
-                <input type="text" id="historySearch" placeholder="🔍 Filter by item..." oninput="renderHistory()">
+            <h2><i class="fas fa-history"></i> Transaction History</h2>
+            <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                <select id="historyStoreFilter" onchange="renderHistory()"
+                    style="min-width:150px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
+                </select>
+                <input type="text" id="historySearch" placeholder="🔍 Search item..."
+                    oninput="renderHistory()"
+                    style="flex:1;min-width:180px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
             </div>
-            <div id="historyContent"></div>
+            <div id="historyContent">⏳ Loading...</div>
         </div>
 
-        <!-- Movement -->
+        <!-- MOVEMENT TAB -->
         <div class="card" id="tab-movement">
-            <h2><i class="fas fa-chart-line"></i> Monthly Movement</h2>
-            <div class="form-row">
-                <select id="movementYear" onchange="renderMovement()"></select>
-                <select id="movementMonth" onchange="renderMovement()"></select>
-                <select id="movementStoreFilter" onchange="renderMovement()"></select>
+            <h2><i class="fas fa-chart-line"></i> Stock Movement</h2>
+            <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                <select id="movementYear" onchange="renderMovement()"
+                    style="min-width:110px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
+                </select>
+                <select id="movementMonth" onchange="renderMovement()"
+                    style="min-width:140px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
+                </select>
+                <select id="movementStoreFilter" onchange="renderMovement()"
+                    style="min-width:150px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
+                </select>
             </div>
-            <div id="movementContent"></div>
+            <div id="movementContent">⏳ Loading...</div>
         </div>
 
-        <!-- Import -->
+        <!-- IMPORT TAB -->
         <div class="card" id="tab-import">
-            <h2><i class="fas fa-file-import"></i> Master Data Import</h2>
+            <h2><i class="fas fa-file-import"></i> Import Opening Stock</h2>
+
             <div class="form-group">
-                <label>Select Store for Import</label>
-                <select id="importStore">
+                <label><i class="fas fa-store"></i> Select Store *</label>
+                <select id="importStore" style="width:100%;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
                     <option value="Store 1">Store 1</option>
                     <option value="Store 2">Store 2</option>
                     <option value="Store 3">Store 3</option>
                 </select>
             </div>
-            <div style="background:#f9f9f9; padding:1.5rem; border-radius:10px; border:1px dashed #ccc;">
-                <p style="margin-bottom:1rem; font-weight:bold;">Option 1: Excel File</p>
-                <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="margin-bottom:1rem;">
-                <button class="btn btn-success" id="uploadBtn" onclick="importFromFile()"><i class="fas fa-upload"></i> Upload File</button>
-                
-                <div style="margin:1.5rem 0; text-align:center; color:#999; font-size:0.8rem;">—— OR ——</div>
-                
-                <p style="margin-bottom:1rem; font-weight:bold;">Option 2: Paste Data</p>
-                <textarea id="importData" placeholder="Item Name [Tab] Quantity" style="height:100px; margin-bottom:1rem;"></textarea>
-                <button class="btn btn-success" onclick="processImport()"><i class="fas fa-paste"></i> Import Pasted Text</button>
+
+            <div class="import-section">
+                <h3><i class="fas fa-file-excel"></i> Upload Excel / CSV</h3>
+                <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
+                <button class="btn btn-success btn-block" id="uploadBtn" onclick="importFromFile()">
+                    <i class="fas fa-upload"></i> UPLOAD & IMPORT
+                </button>
+            </div>
+
+            <div class="divider">OR</div>
+
+            <div class="import-section">
+                <h3><i class="fas fa-paste"></i> Paste from Excel</h3>
+                <textarea id="importData" placeholder="Copy from Excel and paste here (Column A = Item Name, Column B = Qty)"></textarea>
+                <button class="btn btn-success btn-block" onclick="processImport()">
+                    <i class="fas fa-file-import"></i> IMPORT PASTED DATA
+                </button>
             </div>
         </div>
+
     </div>
 </div>
 
 <script>
-// REPLACE WITH YOUR URL
-const scriptURL = 'https://script.google.com/macros/s/AKfycbw_OBrorqhITwsW_NZqJB3apLsUKyg3h8Sg9i7cDrHvfzdo4g7SodU15T7BmRsS6dQMPw/exec';
+// ===================== CONFIG =====================
+const scriptURL = 'https://script.google.com/macros/s/AKfycbw_OBrorqhITwsW_NZqJB3apLsUKyg3h8Sg9i7cDrHvfzdo4g7SodU15T7BmRsS6dQMPw/exec'; // Replace with your actual Apps Script URL
 
 const USERS = {
     master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
@@ -240,209 +706,467 @@ let currentUser = null;
 let allStockData = [];
 let allHistoryData = [];
 
-// Handle Login
+// ===================== LOGIN =====================
 function login() {
     const pwd = document.getElementById('passwordInput').value.trim().toUpperCase();
     let found = null;
     for (let k in USERS) { if (USERS[k].password === pwd) { found = USERS[k]; break; } }
-    
     if (found) {
         currentUser = found;
         localStorage.setItem('eifUser', JSON.stringify({ store: found.store }));
         showApp();
     } else {
-        document.getElementById('loginError').textContent = '❌ Invalid Password';
+        document.getElementById('loginError').textContent = '❌ Wrong Password';
     }
 }
 
 function logout() { localStorage.removeItem('eifUser'); location.reload(); }
 
+// ===================== SHOW APP =====================
 function showApp() {
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('appScreen').classList.add('active');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
     document.getElementById('userBadge').textContent = currentUser.label;
 
-    // Show/Hide Import button
-    document.getElementById('importNavBtn').style.display = (currentUser.store === null) ? 'flex' : 'none';
+    const importBtn = document.getElementById('importNavBtn');
+    if (importBtn) importBtn.style.display = currentUser.store === null ? 'flex' : 'none';
 
-    // Lock store selection for store-level users
     if (currentUser.store) {
         document.getElementById('addStore').value = currentUser.store;
         document.getElementById('addStore').disabled = true;
     }
 
-    populateStoreFilters();
+    populateStoreDropdowns();
     populateMonthYear();
     loadStock();
 }
 
-function showTab(tabId, btn) {
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    
-    document.getElementById('tab-' + tabId).classList.add('active');
-    btn.classList.add('active');
-    
-    if (tabId === 'stock') loadStock();
-    if (tabId === 'history') loadHistory();
-    if (tabId === 'movement') loadMovement();
-    if (tabId === 'add') loadItemSuggestions();
-}
-
-function populateStoreFilters() {
+// ===================== POPULATE DROPDOWNS =====================
+function populateStoreDropdowns() {
+    const isMaster = currentUser.store === null;
     const stores = ['Store 1', 'Store 2', 'Store 3'];
+
     ['stockStoreFilter', 'historyStoreFilter', 'movementStoreFilter'].forEach(id => {
         const sel = document.getElementById(id);
-        sel.innerHTML = (currentUser.store === null) ? '<option value="">All Stores</option>' : '';
+        if (!sel) return;
+        sel.innerHTML = '';
+        if (isMaster) sel.innerHTML = '<option value="">All Stores</option>';
         stores.forEach(s => {
-            if (currentUser.store === null || currentUser.store === s) {
+            if (isMaster || s === currentUser.store) {
                 sel.innerHTML += `<option value="${s}">${s}</option>`;
             }
         });
+        if (!isMaster) sel.value = currentUser.store;
     });
 }
 
 function populateMonthYear() {
-    const ySel = document.getElementById('movementYear');
-    const mSel = document.getElementById('movementMonth');
+    const yearSel = document.getElementById('movementYear');
+    const monthSel = document.getElementById('movementMonth');
     const now = new Date();
-    ySel.innerHTML = '';
-    for(let y=now.getFullYear(); y >= now.getFullYear()-2; y--) { ySel.innerHTML += `<option value="${y}">${y}</option>`; }
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    mSel.innerHTML = months.map((m,i) => `<option value="${i+1}" ${(i+1)==(now.getMonth()+1)?'selected':''}>${m}</option>`).join('');
+
+    if (yearSel) {
+        yearSel.innerHTML = '<option value="">All Years</option>';
+        for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) {
+            yearSel.innerHTML += `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`;
+        }
+    }
+
+    if (monthSel) {
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        monthSel.innerHTML = '<option value="">All Months</option>';
+        months.forEach((m, i) => {
+            monthSel.innerHTML += `<option value="${i+1}" ${(i+1) === now.getMonth()+1 ? 'selected' : ''}>${m}</option>`;
+        });
+    }
 }
 
-// Logic - Load Data
-async function loadStock() {
-    const div = document.getElementById('stockContent');
-    div.innerHTML = '<p style="padding:20px; text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading stock...</p>';
+// ===================== SHOW TAB =====================
+function showTab(tab, btn) {
+    if (tab === 'import' && currentUser && currentUser.store !== null) return alert('⛔ Access Denied');
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById('tab-' + tab);
+    if (el) el.classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (tab === 'stock') loadStock();
+    if (tab === 'history') loadHistory();
+    if (tab === 'movement') loadMovement();
+    if (tab === 'add') loadItemSuggestions();
+}
+
+// ===================== ITEM SUGGESTIONS =====================
+async function loadItemSuggestions() {
     try {
-        const r = await fetch(`${scriptURL}?action=getStock&ts=${Date.now()}`);
-        allStockData = await r.json();
-        renderStock();
-    } catch(e) { div.innerHTML = 'Error loading data.'; }
+        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
+        const data = await r.json();
+        let items = data;
+        if (currentUser.store) items = items.filter(d => d.store === currentUser.store);
+        const names = [...new Set(items.map(d => d.itemName))].sort();
+        const datalist = document.getElementById('itemSuggestions');
+        datalist.innerHTML = names.map(n => `<option value="${n}">`).join('');
+    } catch (e) {
+        console.log('Item suggestions error:', e);
+    }
 }
 
-function renderStock() {
-    const div = document.getElementById('stockContent');
-    const filter = document.getElementById('stockStoreFilter').value;
-    const search = document.getElementById('stockSearch').value.toLowerCase();
-    
-    let rows = allStockData.filter(d => 
-        (!filter || d.store === filter) && 
-        (!search || d.itemName.toLowerCase().includes(search))
-    );
-
-    if(!rows.length) { div.innerHTML = '<p style="padding:20px; text-align:center; color:#999;">No items found</p>'; return; }
-    
-    let html = '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>Balance</th></tr>';
-    rows.forEach(d => {
-        const color = d.qty < 0 ? 'red' : (d.qty == 0 ? 'orange' : 'green');
-        html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td style="color:${color}; font-weight:bold;">${d.qty}</td></tr>`;
-    });
-    div.innerHTML = html + '</table></div>';
-}
-
+// ===================== ADD STOCK =====================
 async function addStock() {
     const store = document.getElementById('addStore').value;
     const type = document.getElementById('addType').value;
-    const item = document.getElementById('addItemName').value.trim();
-    const qty = document.getElementById('addQty').value;
-    const dc = document.getElementById('addDcNo').value;
+    const itemName = document.getElementById('addItemName').value.trim();
+    const qty = document.getElementById('addQty').value.trim();
+    const dcNo = document.getElementById('addDcNo').value.trim();
 
-    if(!item || !qty) return alert('Fill required fields');
+    if (!store) return showAddResult('❌ Please select a store!', 'error');
+    if (!type) return showAddResult('❌ Please select IN or OUT!', 'error');
+    if (!itemName) return showAddResult('❌ Please enter item name!', 'error');
+    if (!qty || parseFloat(qty) <= 0) return showAddResult('❌ Please enter a valid quantity!', 'error');
 
-    const btn = document.querySelector('#tab-add .btn-success');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    showAddResult('<i class="fas fa-spinner fa-spin"></i> Submitting...', '');
 
     try {
         const res = await fetch(scriptURL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'addStock', store, itemName: item, qty, type, dcNo: dc })
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: 'addStock',
+                store: store,
+                itemName: itemName,
+                qty: parseFloat(qty),
+                type: type,
+                dcNo: dcNo
+            })
         });
+
         const result = await res.json();
-        const alertDiv = document.getElementById('addResult');
-        alertDiv.className = 'alert ' + (result.status === 'success' ? 'success' : 'error');
-        alertDiv.innerHTML = result.message;
-        alertDiv.style.display = 'flex';
-        
-        if(result.status === 'success') {
+
+        if (result.status === 'success') {
+            showAddResult('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
             document.getElementById('addItemName').value = '';
             document.getElementById('addQty').value = '';
             document.getElementById('addDcNo').value = '';
+            loadStock();
+            loadHistory();
+        } else {
+            showAddResult('<i class="fas fa-exclamation-circle"></i> ' + (result.message || 'Failed'), 'error');
         }
-    } catch(e) { alert('Network error'); }
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-save"></i> Save Transaction';
+    } catch (e) {
+        showAddResult('<i class="fas fa-exclamation-circle"></i> Error: ' + e.message, 'error');
+    }
 }
 
-// History, Movement, Import functions go here (keeping existing working logic)
+function showAddResult(msg, type) {
+    const div = document.getElementById('addResult');
+    div.innerHTML = msg;
+    div.className = type ? 'alert ' + type : '';
+    if (type === 'success') setTimeout(() => { div.style.display = 'none'; }, 3000);
+}
+
+// ===================== LOAD STOCK =====================
+async function loadStock() {
+    const div = document.getElementById('stockContent');
+    if (!div) return;
+    div.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+    try {
+        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
+        allStockData = await r.json();
+        renderStock();
+    } catch (e) { div.innerHTML = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Error: ' + e.message + '</div>'; }
+}
+
+function renderStock() {
+    const div = document.getElementById('stockContent');
+    const storeFilter = document.getElementById('stockStoreFilter')?.value || '';
+    const search = (document.getElementById('stockSearch')?.value || '').toLowerCase();
+
+    let rows = allStockData;
+    if (currentUser.store) rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
+    if (search) rows = rows.filter(d => (d.itemName || '').toLowerCase().includes(search));
+
+    if (!rows.length) {
+        div.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;"><i class="fas fa-box-open fa-3x" style="margin-bottom:1rem;color:#ccc;"></i><p>No records found</p></div>';
+        return;
+    }
+
+    let html = `
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Store</th>
+                        <th>Item Name</th>
+                        <th style="text-align:right;">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    rows.forEach(d => {
+        const bal = parseFloat(d.qty) || 0;
+        const color = bal < 0 ? 'var(--danger)' : bal === 0 ? 'var(--warning)' : 'var(--success)';
+        html += `
+            <tr>
+                <td>${d.store}</td>
+                <td>${d.itemName}</td>
+                <td style="text-align:right;color:${color};font-weight:bold;">
+                    ${bal}
+                </td>
+            </tr>
+        `;
+    });
+
+    div.innerHTML = html + '</tbody></table></div>';
+}
+
+// ===================== LOAD HISTORY =====================
 async function loadHistory() {
     const div = document.getElementById('historyContent');
-    div.innerHTML = '<p style="padding:20px; text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading history...</p>';
+    if (!div) return;
+    div.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
     try {
-        const r = await fetch(`${scriptURL}?action=getHistory&ts=${Date.now()}`);
+        const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
         allHistoryData = await r.json();
         renderHistory();
-    } catch(e) { div.innerHTML = 'Error.'; }
+    } catch (e) { div.innerHTML = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Error: ' + e.message + '</div>'; }
 }
 
 function renderHistory() {
     const div = document.getElementById('historyContent');
-    const filter = document.getElementById('historyStoreFilter').value;
-    const search = document.getElementById('historySearch').value.toLowerCase();
-    let rows = allHistoryData.filter(d => (!filter || d.store === filter) && (!search || d.itemName.toLowerCase().includes(search)));
-    
-    let html = '<div class="table-wrap"><table><tr><th>Date</th><th>Store</th><th>Item</th><th>Qty</th><th>Type</th></tr>';
+    const storeFilter = document.getElementById('historyStoreFilter')?.value || '';
+    const search = (document.getElementById('historySearch')?.value || '').toLowerCase();
+
+    let rows = allHistoryData;
+    if (currentUser.store) rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
+    if (search) rows = rows.filter(d => (d.itemName || '').toLowerCase().includes(search));
+
+    if (!rows.length) {
+        div.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;"><i class="fas fa-history fa-3x" style="margin-bottom:1rem;color:#ccc;"></i><p>No records found</p></div>';
+        return;
+    }
+
+    let html = `
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Store</th>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Type</th>
+                        <th>DC No</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
     rows.forEach(d => {
-        html += `<tr><td>${d.date.split(' ')[0]}</td><td>${d.store}</td><td>${d.itemName}</td><td>${d.qty}</td><td>${d.type}</td></tr>`;
+        const typeStyle = d.type === 'IN' ? 'color:var(--success);font-weight:bold;' : 'color:var(--danger);font-weight:bold;';
+        html += `
+            <tr>
+                <td>${d.date || '-'}</td>
+                <td>${d.store || '-'}</td>
+                <td>${d.itemName || '-'}</td>
+                <td>${d.qty || '-'}</td>
+                <td style="${typeStyle}">${d.type || '-'}</td>
+                <td>${d.dcNo || '-'}</td>
+            </tr>
+        `;
     });
-    div.innerHTML = html + '</table></div>';
+
+    div.innerHTML = html + '</tbody></table></div>';
 }
 
+// ===================== LOAD MOVEMENT =====================
 async function loadMovement() {
-    await loadHistory();
-    renderMovement();
+    const div = document.getElementById('movementContent');
+    if (!div) return;
+    div.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+    try {
+        const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
+        allHistoryData = await r.json();
+        renderMovement();
+    } catch (e) { div.innerHTML = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Error: ' + e.message + '</div>'; }
 }
 
 function renderMovement() {
     const div = document.getElementById('movementContent');
-    const year = document.getElementById('movementYear').value;
-    const month = document.getElementById('movementMonth').value;
-    const store = document.getElementById('movementStoreFilter').value;
+    const storeFilter = document.getElementById('movementStoreFilter')?.value || '';
+    const yearFilter = document.getElementById('movementYear')?.value || '';
+    const monthFilter = document.getElementById('movementMonth')?.value || '';
 
-    let filtered = allHistoryData.filter(d => {
+    let rows = allHistoryData;
+    if (currentUser.store) rows = rows.filter(d => d.store === currentUser.store);
+    else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
+
+    if (yearFilter) rows = rows.filter(d => {
         const dt = new Date(d.date);
-        return dt.getFullYear() == year && (dt.getMonth()+1) == month && (!store || d.store == store);
+        return !isNaN(dt) && dt.getFullYear() == yearFilter;
+    });
+    if (monthFilter) rows = rows.filter(d => {
+        const dt = new Date(d.date);
+        return !isNaN(dt) && (dt.getMonth() + 1) == monthFilter;
     });
 
-    const summary = {};
-    filtered.forEach(d => {
-        const key = d.store + '||' + d.itemName;
-        if(!summary[key]) summary[key] = { s: d.store, i: d.itemName, in:0, out:0 };
-        if(d.type == 'IN') summary[key].in += d.qty; else summary[key].out += d.qty;
+    const groups = {};
+    rows.forEach(d => {
+        const key = `${d.store}||${d.itemName}`;
+        if (!groups[key]) groups[key] = { store: d.store, itemName: d.itemName, inQty: 0, outQty: 0 };
+        if (d.type === 'IN') groups[key].inQty += parseFloat(d.qty) || 0;
+        if (d.type === 'OUT') groups[key].outQty += parseFloat(d.qty) || 0;
     });
 
-    let html = '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>IN</th><th>OUT</th><th>NET</th></tr>';
-    Object.values(summary).forEach(v => {
-        html += `<tr><td>${v.s}</td><td>${v.i}</td><td style="color:green">+${v.in}</td><td style="color:red">-${v.out}</td><td>${v.in - v.out}</td></tr>`;
+    const result = Object.values(groups);
+    if (!result.length) {
+        div.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;"><i class="fas fa-chart-line fa-3x" style="margin-bottom:1rem;color:#ccc;"></i><p>No movement data found</p></div>';
+        return;
+    }
+
+    let html = `
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Store</th>
+                        <th>Item</th>
+                        <th style="color:var(--success);">IN</th>
+                        <th style="color:var(--danger);">OUT</th>
+                        <th>Net</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    result.forEach(d => {
+        const net = d.inQty - d.outQty;
+        const netStyle = net >= 0 ? 'color:var(--success);font-weight:bold;' : 'color:var(--danger);font-weight:bold;';
+        html += `
+            <tr>
+                <td>${d.store}</td>
+                <td>${d.itemName}</td>
+                <td style="color:var(--success);">+${d.inQty}</td>
+                <td style="color:var(--danger);">-${d.outQty}</td>
+                <td style="${netStyle}">${net >= 0 ? '+' : ''}${net}</td>
+            </tr>
+        `;
     });
-    div.innerHTML = html + '</table></div>';
+
+    div.innerHTML = html + '</tbody></table></div>';
 }
 
-async function loadItemSuggestions() {
-    const r = await fetch(`${scriptURL}?action=getStock`);
-    const data = await r.json();
-    const names = [...new Set(data.map(d => d.itemName))];
-    document.getElementById('itemSuggestions').innerHTML = names.map(n => `<option value="${n}">`).join('');
+// ===================== IMPORT FROM FILE =====================
+async function importFromFile() {
+    const fileInput = document.getElementById('excelFile');
+    const file = fileInput.files[0];
+    if (!file) return alert('⚠️ Select a file first');
+
+    const store = document.getElementById('importStore').value;
+    if (!store) return alert('⚠️ Select a store first');
+
+    const btn = document.getElementById('uploadBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    btn.disabled = true;
+
+    try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        const items = [];
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row[0]) {
+                items.push({
+                    itemName: row[0].toString().trim(),
+                    qty: parseFloat(row[1]) || 0
+                });
+            }
+        }
+
+        if (!items.length) throw new Error('No data found in file');
+
+        const res = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: 'importOpening',
+                store: store,
+                items: items
+            })
+        });
+
+        const result = await res.json();
+        if (result.status === 'success') {
+            alert(`✅ ${result.message}`);
+            fileInput.value = '';
+        } else {
+            throw new Error(result.message || 'Import failed');
+        }
+    } catch (e) {
+        alert('❌ ' + e.message);
+    } finally {
+        btn.innerHTML = '<i class="fas fa-upload"></i> UPLOAD & IMPORT';
+        btn.disabled = false;
+    }
 }
 
-// Auto Login check
-const saved = localStorage.getItem('eifUser');
-if(saved) {
-    const data = JSON.parse(saved);
-    for(let k in USERS) { if(USERS[k].store === data.store) { currentUser = USERS[k]; showApp(); break; } }
+// ===================== PASTE IMPORT =====================
+async function processImport() {
+    const txt = document.getElementById('importData').value.trim();
+    if (!txt) return alert('Paste data first');
+
+    const store = document.getElementById('importStore').value;
+    if (!store) return alert('Select a store first');
+
+    const items = txt.split('\n').map(line => {
+        const p = line.split('\t');
+        return {
+            itemName: (p[0] || '').trim(),
+            qty: parseFloat(p[1]) || 0
+        };
+    }).filter(i => i.itemName);
+
+    if (!items.length) return alert('No valid data found');
+
+    try {
+        const res = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: 'importOpening',
+                store: store,
+                items: items
+            })
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+            alert(`✅ ${result.message}`);
+            document.getElementById('importData').value = '';
+        } else {
+            throw new Error(result.message || 'Import failed');
+        }
+    } catch (e) {
+        alert('❌ Error: ' + e.message);
+    }
+}
+
+// ===================== AUTO LOGIN =====================
+const _saved = localStorage.getItem('eifUser');
+if (_saved) {
+    try {
+        const d = JSON.parse(_saved);
+        for (let k in USERS) {
+            if (USERS[k].store === d.store) {
+                currentUser = USERS[k];
+                showApp();
+                break;
+            }
+        }
+    } catch (e) { localStorage.removeItem('eifUser'); }
 }
 </script>
 </body>
