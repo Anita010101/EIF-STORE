@@ -15,24 +15,28 @@
         .screen { display: none; }
         .screen.active { display: block; }
         
-       /* Login Screen - Center Content */
+       /* Screen Management */
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* Login Screen - Center Content */
+#loginScreen { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    z-index: 9999;
+}
+
 #loginScreen.active { 
     display: flex !important;
     justify-content: center; 
     align-items: center; 
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    z-index: 9999;
 }
 
-/* Hide appScreen when login is showing */
-#loginScreen.active ~ #appScreen {
-    display: none !important;
-}
+
 
         .login-box {
             background: white;
@@ -250,6 +254,7 @@
         <div id="loginError"></div>
         <input type="password" id="passwordInput" placeholder="Enter Password" onkeypress="if(event.key==='Enter') login()">
         <button onclick="login()">🔓 Login</button>
+        
     </div>
         <!-- ===== FOOTER ===== -->
     <div class="app-footer">
