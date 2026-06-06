@@ -103,13 +103,14 @@
     </div>
 
     <div class="container">
-        <div class="nav">
-            <button class="active" onclick="showTab('add', this)">➕ Add</button>
-            <button onclick="showTab('stock', this)">📊 Stock</button>
-            <button onclick="showTab('movement', this)">📈 Movement</button>
-            <button onclick="showTab('history', this)">📜 History</button>
-            <button id="NavBtn" style="display:none;" onclick="showTab('import', this)">📥 Import</button>
-        </div>
+       <div class="nav">
+    <button class="nav-btn active" onclick="showTab('add', this)">➕ Add</button>
+    <button class="nav-btn" onclick="showTab('stock', this)">📊 Stock</button>
+    <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)">📥 Import</button>
+    <button class="nav-btn" onclick="showTab('movement', this)">📈 Movement</button>
+    <button class="nav-btn" onclick="showTab('history', this)">📜 History</button>
+</div>
+
 
         <!-- ADD TAB -->
         <div class="card active" id="tab-add">
