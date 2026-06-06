@@ -287,7 +287,7 @@
             <div class="import-section">
                 <h3>📁 Upload Excel / CSV</h3>
                 <input type="file" id="excelFile" class="import-file-input" accept=".xlsx,.xls,.csv">
-                <button class="btn-success" id="uploadBtn" onclick="importFromFile()" style="width:100%;">📤 UPLOAD & IMPORT</button>
+                <button class="btn-success" id="uploadBtn" onclick="()" style="width:100%;">📤 UPLOAD & IMPORT</button>
             </div>
 
             <div class="divider"><hr><span>OR</span><hr></div>
@@ -305,7 +305,7 @@
 <!-- ========== JAVASCRIPT ========== -->
 <script>
 // CONFIG
-const scriptURL = 'https://script.google.com/macros/s/AKfycbzN5_6I6T7vktORzkbSlC2eD8oz6JJsyHFq51VEsOn7ojDapJMMeqe7PR6XGzOtg1hkCw/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzH5EyCpoZ72m4wsPFehh5ReNDTZUN2vPNVjOS_RzIWj-5V-JCMyqWXg70OUhfcq8Ou/exec';
 
 const USERS = {
     master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
@@ -518,11 +518,15 @@ function renderMovement() {
     div.innerHTML = html + '</tbody></table>';
 }
 
+
 // ========== IMPORT FROM FILE ==========
 async function importFromFile() {
     const fileInput = document.getElementById('excelFile');
     const file = fileInput.files[0];
     if (!file) return alert('⚠️ Select a file first');
+
+    const store = document.getElementById('importStore').value;
+    if (!store) return alert('⚠️ Select a store first');
 
     const btn = document.getElementById('uploadBtn');
     btn.textContent = '⏳ Processing...';
@@ -533,30 +537,37 @@ async function importFromFile() {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        const store = document.getElementById('importStore').value;
+        
         const items = [];
-
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            if (row[0]) items.push({
-                store: store,
-                itemName: row[0].toString().trim(),
-                qty: parseFloat(row[1]) || 0
-            });
+            if (row[0]) {
+                items.push({
+                    itemName: row[0].toString().trim(),
+                    qty: parseFloat(row[1]) || 0
+                });
+            }
         }
 
-        if (!items.length) throw new Error('No data in sheet');
+        if (!items.length) throw new Error('No data found in file');
 
         const res = await fetch(scriptURL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'importOpening', items: items })
+            body: JSON.stringify({ 
+                action: 'importOpening',
+                store: store,
+                items: items 
+            })
         });
+        
         const result = await res.json();
         if (result.status === 'success') {
-            alert(`✅ Imported ${items.length} items`);
+            alert(`✅ ${result.message}`);
             fileInput.value = '';
-        } else throw new Error(result.message || 'Error');
+        } else {
+            throw new Error(result.message || 'Import failed');
+        }
     } catch (e) {
         alert('❌ ' + e.message);
     } finally {
@@ -565,26 +576,48 @@ async function importFromFile() {
     }
 }
 
+
+
 // ========== PASTE IMPORT ==========
 async function processImport() {
     const txt = document.getElementById('importData').value.trim();
     if (!txt) return alert('Paste data first');
+    
     const store = document.getElementById('importStore').value;
+    if (!store) return alert('Select a store first');
+
     const items = txt.split('\n').map(line => {
         const p = line.split('\t');
-        return { store: store, itemName: (p[0] || '').trim(), qty: parseFloat(p[1]) || 0 };
+        return { 
+            itemName: (p[0] || '').trim(), 
+            qty: parseFloat(p[1]) || 0 
+        };
     }).filter(i => i.itemName);
 
+    if (!items.length) return alert('No valid data found');
+
     try {
-        await fetch(scriptURL, {
+        const res = await fetch(scriptURL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'importOpening', items: items })
+            body: JSON.stringify({ 
+                action: 'importOpening',
+                store: store,
+                items: items 
+            })
         });
-        alert(`✅ Imported ${items.length} items`);
-        document.getElementById('importData').value = '';
-    } catch (e) { alert('❌ Error'); }
+        const result = await res.json();
+        if (result.status === 'success') {
+            alert(`✅ ${result.message}`);
+            document.getElementById('importData').value = '';
+        } else {
+            throw new Error(result.message || 'Import failed');
+        }
+    } catch (e) { 
+        alert('❌ Error: ' + e.message); 
+    }
 }
+
 
 // ========== AUTO LOGIN ==========
 const _saved = localStorage.getItem('eifUser');
