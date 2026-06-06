@@ -201,6 +201,9 @@
         .btn-primary:hover { background: #0b5ed7; }
         .btn-success { background: #198754; color: white; }
         .btn-success:hover { background: #157347; }
+        .btn-excel { background: #217346; color: white; }
+         .btn-excel:hover { opacity: 0.9; }
+
         .btn-danger { background: #dc3545; color: white; }
         .btn-danger:hover { background: #bb2d3b; }
         
@@ -280,7 +283,12 @@
 
         <!-- STOCK TAB -->
         <div class="card active" id="tab-stock">
-            <h2>📊 Live Stock Balance</h2>
+         <h2><i class="fas fa-warehouse"></i> Current Stock Balance 
+    <button onclick="exportToExcel('stock')" style="margin-left:auto; background:#217346; color:white; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">
+        <i class="fas fa-file-excel"></i> Export to Excel
+    </button>
+</h2>
+
             <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
                 <select id="stockStoreFilter" onchange="renderStock()" 
                     style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
@@ -348,7 +356,12 @@
 
         <!-- HISTORY TAB -->
         <div class="card" id="tab-history">
-            <h2>📜 Transaction History</h2>
+        <h2><i class="fas fa-history"></i> Transaction Log 
+    <button onclick="exportToExcel('history')" style="margin-left:auto; background:#217346; color:white; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">
+        <i class="fas fa-file-excel"></i> Export to Excel
+    </button>
+</h2>
+
             <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
                 <select id="historyStoreFilter" onchange="renderHistory()" 
                     style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
@@ -457,6 +470,26 @@ function showApp() {
     populateStoreDropdowns();
     populateMonthYear();
     loadStock();
+}
+// Export to Excel
+function exportToExcel(type) {
+    let data = [];
+    let filename = '';
+    
+    if (type === 'stock') {
+        data = allStockData;
+        filename = 'Current_Stock_Balance.xlsx';
+    } else if (type === 'history') {
+        data = allHistoryData;
+        filename = 'Transaction_History.xlsx';
+    }
+    
+    if (!data.length) { alert('No data to export'); return; }
+    
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, filename);
 }
 
 // ===================== POPULATE DROPDOWNS =====================
