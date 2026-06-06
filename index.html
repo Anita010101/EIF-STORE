@@ -17,13 +17,9 @@
         
         
        /* Screen Management */
-.screen { 
-    display: none; 
-}
-.screen.active { 
-    display: flex; 
-    flex-direction: column; 
-}
+.screen { display: none !important; }
+.screen.active { display: flex !important; flex-direction: column; min-height: 100vh; }
+
 
         
        /* Login Screen */
@@ -40,9 +36,28 @@
     z-index: 9999;
 }
 
+#loginScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
 #loginScreen.active {
     display: flex;
 }
+
+#appScreen {
+    display: none !important;
+}
+
+#appScreen.active {
+    display: flex;
+}
+
 
 #appScreen {
     display: none;
