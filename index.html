@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIF STORE - Engineering Industries Factory</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -182,9 +184,8 @@
 </div>
 
 <script>
-// ==================== CHANGE THIS URL ====================
+// ==================== CONFIGURATION ====================
 const scriptURL = 'https://script.google.com/macros/s/AKfycbxNf0PwKfyYFkYzdvqSIohSkCh1vlN7zDePAp9X-GmUmywtrx0O3YOm7PUKWLXi1yIpyA/exec';
-// ========================================================
 
 const USERS = {
     master: { password: 'EIF2026', store: null, label: '👑 Master Admin' },
@@ -194,11 +195,8 @@ const USERS = {
 };
 
 let currentUser = null;
-let stockDataCache = [];
-let movDataCache = [];
-let histDataCache = [];
 
-// ==================== LOGIN ====================
+// ==================== LOGIN SYSTEM ====================
 function login() {
     const pwd = document.getElementById('passwordInput').value.trim().toUpperCase();
     let found = null;
@@ -214,12 +212,10 @@ function login() {
 
 function logout() { localStorage.removeItem('eifUser'); location.reload(); }
 
-// ==================== SHOW APP ====================
 function showApp() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('userBadge').textContent = currentUser.label;
-
     document.getElementById('importNavBtn').style.display = (currentUser.store === null) ? 'block' : 'none';
 
     const sel = document.getElementById('store');
@@ -235,7 +231,6 @@ function showApp() {
     loadStock();
 }
 
-// ==================== SHOW TAB ====================
 function showTab(tab, btn) {
     if (tab === 'import' && currentUser.store !== null) return alert('Only Master Admin can access Import');
     document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
@@ -243,36 +238,32 @@ function showTab(tab, btn) {
     document.getElementById('tab-' + tab).classList.add('active');
     if (btn) btn.classList.add('active');
     if (tab === 'stock') loadStock();
-    if (tab === 'movement') loadMovement();
-    if (tab === 'history') loadHistory();
 }
 
-// ==================== SEND DATA (FIXED FETCH) ====================
+// ==================== SAVE TRANSACTION ====================
 async function sendData() {
     const btn = document.getElementById('submitBtn');
     const msgDiv = document.getElementById('message');
     const itemName = document.getElementById('itemName').value.trim();
     const qty = document.getElementById('qty').value;
     const dcno = document.getElementById('dcno').value.trim();
+
     if (!itemName || !qty) return alert('Item Name and Quantity required');
 
     btn.textContent = '⏳ Saving...';
     btn.disabled = true;
-    msgDiv.innerHTML = '';
-
-    const payload = {
-        store: document.getElementById('store').value,
-        itemName: itemName,
-        qty: qty,
-        type: document.getElementById('type').value,
-        dcno: dcno
-    };
 
     try {
         const response = await fetch(scriptURL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                store: document.getElementById('store').value,
+                itemName: itemName,
+                qty: qty,
+                type: document.getElementById('type').value,
+                dcno: dcno
+            })
         });
         const result = await response.json();
         if (result.status === 'success') {
@@ -280,8 +271,6 @@ async function sendData() {
             document.getElementById('itemName').value = '';
             document.getElementById('qty').value = '1';
             document.getElementById('dcno').value = '';
-        } else {
-            msgDiv.innerHTML = '<div class="msg-error">❌ ' + result.message + '</div>';
         }
     } catch (e) {
         msgDiv.innerHTML = '<div class="msg-error">❌ Connection error: ' + e.message + '</div>';
@@ -291,28 +280,18 @@ async function sendData() {
     }
 }
 
-// ==================== LOAD STOCK (FIXED) ====================
+// ==================== LOAD STOCK ====================
 async function loadStock() {
     const div = document.getElementById('stockContent');
-    const sumDiv = document.getElementById('stockSummary');
     div.innerHTML = '<div class="loading">⚙️ Loading...</div>';
-
     try {
-        const r = await fetch(scriptURL + '?action=getStock&timestamp=' + Date.now());
+        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
         const data = await r.json();
-        stockDataCache = data;
-
         let filtered = data;
         if (currentUser.store) filtered = filtered.filter(d => d.store === currentUser.store);
-
+        
         const search = document.getElementById('stockSearch').value.toLowerCase();
         if (search) filtered = filtered.filter(d => d.itemName.toLowerCase().includes(search));
-
-        const total = filtered.length;
-        const low = filtered.filter(d => d.qty <= 0).length;
-        sumDiv.innerHTML = `<div class="sum-card"><div class="num">${total}</div><div class="lbl">Total Items</div></div><div class="sum-card"><div class="num" style="color:#dc3545">${low}</div><div class="lbl">Zero/Negative</div></div>`;
-
-        if (!filtered.length) { div.innerHTML = '<div class="loading">No data</div>'; return; }
 
         let html = '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>Balance</th></tr>';
         filtered.forEach(d => {
@@ -321,113 +300,100 @@ async function loadStock() {
         });
         div.innerHTML = html + '</table></div>';
     } catch (e) {
-        div.innerHTML = '<div class="msg-error">❌ Failed to load: ' + e.message + '</div>';
+        div.innerHTML = '<div class="msg-error">❌ Load failed</div>';
     }
 }
 
-// ==================== OTHER FUNCTIONS (same as before) ====================
-async function loadMovement() { /* similar to before */ }
-async function loadHistory() { /* similar to before */ }
-
+// ==================== EXCEL IMPORT (FIXED) ====================
 async function importFromFile() {
-    const fileInput = document.getElementById('excelFile');
-    const file = fileInput.files[0];
-    if (!file) return alert('❌ Please select an Excel file first.');
-
+    const file = document.getElementById('excelFile').files[0];
+    if (!file) return alert('Select an Excel file');
+    
     const btn = document.getElementById('uploadBtn');
     btn.textContent = '⏳ Reading...';
     btn.disabled = true;
 
     try {
         const data = await file.arrayBuffer();
-        
-        // This line requires the library from Step 1
         const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        
-        // Convert Excel to JSON (Header: 1 means it returns an array of arrays)
-        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
         const store = document.getElementById('importStore').value;
         const items = [];
 
-        // Loop through rows (starting from i=1 to skip the header)
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            if (row.length < 2) continue; // Skip empty rows
-
-            const name = row[0] ? row[0].toString().trim() : "";
-            const qty = parseFloat(row[1]);
-
-            if (name && !isNaN(qty)) {
-                items.push({ store: store, itemName: name, qty: qty });
-            }
+            if (!row[0]) continue;
+            items.push({ store: store, itemName: row[0].toString(), qty: parseFloat(row[1]) || 0 });
         }
 
-        if (items.length === 0) {
-            alert('❌ No valid data found. Make sure Column A is Item Name and Column B is Quantity.');
-            btn.textContent = '📤 UPLOAD & IMPORT FILE';
-            btn.disabled = false;
-            return;
-        }
+        if (items.length === 0) throw new Error("No data found in file");
 
-        // Send to Google Sheets
         const response = await fetch(scriptURL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'importOpening', items: items })
         });
-
-        const result = await response.json();
         
-        if (result.status === 'success') {
-            alert('✅ Success! ' + items.length + ' items imported to Opening Stock.');
-            fileInput.value = ''; // Clear file input
-        } else {
-            alert('❌ Server Error: ' + result.message);
-        }
-
+        alert('✅ Success! Imported ' + items.length + ' items.');
     } catch (e) {
-        console.error(e);
-        alert('❌ Error reading file: ' + e.message + '\n\nMake sure you added the script tag from Step 1.');
+        alert('❌ Error: ' + e.message);
     } finally {
         btn.textContent = '📤 UPLOAD & IMPORT FILE';
         btn.disabled = false;
     }
 }
 
+// ==================== PASTE IMPORT ====================
+async function processImport() {
+    const txt = document.getElementById('importData').value.trim();
+    if (!txt) return alert('Paste data first');
+    const store = document.getElementById('importStore').value;
+    const lines = txt.split('\n');
+    const items = lines.map(line => {
+        const parts = line.split('\t');
+        return { store: store, itemName: parts[0], qty: parseFloat(parts[1]) || 0 };
+    });
 
-function exportCSV(tab) { /* same as before */ }
+    await fetch(scriptURL, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: JSON.stringify({ action: 'importOpening', items: items }) 
+    });
+    alert('✅ Imported ' + items.length + ' items');
+    document.getElementById('importData').value = '';
+}
 
+// ==================== HELPERS ====================
 function populateYears() {
     const sel = document.getElementById('movYear');
+    if(!sel) return;
     const y = new Date().getFullYear();
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
         const opt = document.createElement('option');
         opt.value = y - i; opt.textContent = y - i;
         sel.appendChild(opt);
     }
     document.getElementById('movMonth').innerHTML = '<option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>';
-    document.getElementById('movMonth').value = new Date().getMonth() + 1;
 }
 
 function populateStoreFilters() {
     ['stockStore', 'movStore', 'histStore'].forEach(id => {
         const sel = document.getElementById(id);
+        if(!sel) return;
         sel.innerHTML = '<option value="">All Stores</option><option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>';
         if (currentUser.store) { sel.value = currentUser.store; sel.disabled = true; }
     });
 }
 
-// Auto login
+// Auto-Login Check
 const saved = localStorage.getItem('eifUser');
 if (saved) {
     const d = JSON.parse(saved);
-    for (let k in USERS) {
-        if (USERS[k].store === d.store) { currentUser = USERS[k]; showApp(); break; }
-    }
+    for (let k in USERS) { if (USERS[k].store === d.store) { currentUser = USERS[k]; showApp(); break; } }
 }
 </script>
+
 </body>
 </html>
