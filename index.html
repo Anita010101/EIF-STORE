@@ -1,68 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    // <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-async function importFromFile() {
-    const fileInput = document.getElementById('excelFile');
-    const file = fileInput.files[0];
-    const btn = document.getElementById('importBtn');
-    const msg = document.getElementById('importMsg');
-
-    if (!file) return alert('Please select an Excel file');
-
-    btn.disabled = true;
-    btn.textContent = '⏳ Reading 2500+ items...';
-    msg.innerHTML = '';
-
-    try {
-        const store = document.getElementById('importStoreSelect').value;
-        
-        // --- NEW EXCEL READING LOGIC ---
-        const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-        
-        const items = [];
-        // Loop through rows (start at 1 to skip header)
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            // Adjust indices based on your Excel: Column D is index 3, Column E is index 4
-            const itemName = String(row[3] || '').trim(); 
-            const qty = parseFloat(row[4]);
-
-            if (itemName && !isNaN(qty)) {
-                items.push({ store: store, itemName: itemName, qty: qty });
-            }
-        }
-
-        if (items.length === 0) {
-            throw new Error("No items found! Check if Item Name is in Column D.");
-        }
-
-        btn.textContent = `⏳ Sending ${items.length} items to Opening Stock...`;
-
-        // Send to Apps Script
-        const response = await fetch(scriptURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'importOpening', items: items })
-        });
-
-        const result = await response.json();
-        if (result.status === 'success') {
-            msg.innerHTML = `<div class="msg-success">✅ Successfully imported ${result.imported} items to Opening Stock!</div>`;
-            fileInput.value = '';
-        }
-
-    } catch (e) {
-        msg.innerHTML = `<div class="msg-error">❌ Error: ${e.message}</div>`;
-        console.error(e);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'START IMPORT';
-    }
-}
+ 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EIF STORE - Engineering Industries Factory</title>
@@ -259,7 +198,69 @@ async function importFromFile() {
                 <div id="historyContent"><div class="loading">⚙️ Loading...</div></div>
             </div>
         </div>
+
         
+async function importFromFile() {
+    const fileInput = document.getElementById('excelFile');
+    const file = fileInput.files[0];
+    const btn = document.getElementById('importBtn');
+    const msg = document.getElementById('importMsg');
+
+    if (!file) return alert('Please select an Excel file');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Reading 2500+ items...';
+    msg.innerHTML = '';
+
+    try {
+        const store = document.getElementById('importStoreSelect').value;
+        
+        // --- NEW EXCEL READING LOGIC ---
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+        
+        const items = [];
+        // Loop through rows (start at 1 to skip header)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            // Adjust indices based on your Excel: Column D is index 3, Column E is index 4
+            const itemName = String(row[3] || '').trim(); 
+            const qty = parseFloat(row[4]);
+
+            if (itemName && !isNaN(qty)) {
+                items.push({ store: store, itemName: itemName, qty: qty });
+            }
+        }
+
+        if (items.length === 0) {
+            throw new Error("No items found! Check if Item Name is in Column D.");
+        }
+
+        btn.textContent = `⏳ Sending ${items.length} items to Opening Stock...`;
+
+        // Send to Apps Script
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'importOpening', items: items })
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            msg.innerHTML = `<div class="msg-success">✅ Successfully imported ${result.imported} items to Opening Stock!</div>`;
+            fileInput.value = '';
+        }
+
+    } catch (e) {
+        msg.innerHTML = `<div class="msg-error">❌ Error: ${e.message}</div>`;
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'START IMPORT';
+    }
+}
         <!-- ============ FOOTER ============ -->
         <div class="footer">
             <p class="footer-copy">&copy; 2026 ENGINEERING INDUSTRIES FACTORY</p>
