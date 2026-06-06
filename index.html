@@ -2,629 +2,423 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EIF STORE</title>
-    <!-- SheetJS: Required to read .xlsx files (2500+ items) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EIF STORE - Engineering Industries Factory</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e, #0f3460); min-height: 100vh; padding: 10px; }
-        .container { max-width: 660px; margin: 0 auto; }
-
-        /* ===== LOGIN ===== */
-        .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .login-box { background: #fff; border-radius: 20px; padding: 40px 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); width: 100%; max-width: 380px; text-align: center; }
-        .login-logo { font-size: 52px; margin-bottom: 10px; }
-        .login-company { font-size: 11px; font-weight: 800; color: #0f3460; letter-spacing: 1.5px; margin-bottom: 4px; }
-        .login-title { font-size: 24px; font-weight: 900; color: #1a1a2e; margin-bottom: 28px; }
-        .login-input { width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; margin-bottom: 14px; text-align: center; letter-spacing: 4px; outline: none; }
-        .login-input:focus { border-color: #0f3460; }
-        .login-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #0f3460, #1a6fc4); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; }
-        .login-error { color: #dc3545; font-size: 13px; margin-top: 10px; font-weight: 600; }
-
-        /* ===== APP ===== */
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 16px; min-height: 100vh; }
+        .container { max-width: 500px; margin: 0 auto; }
+        
+        /* LOGIN */
+        .login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-box { background: #fff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); width: 100%; }
+        .login-logo { font-size: 48px; text-align: center; margin-bottom: 16px; }
+        .login-title { font-size: 22px; font-weight: 700; color: #1a1a2e; text-align: center; }
+        .login-subtitle { font-size: 12px; color: #999; text-align: center; margin-bottom: 24px; }
+        .login-input { width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; margin-bottom: 12px; text-align: center; letter-spacing: 2px; }
+        .login-input:focus { outline: none; border-color: #0f3460; }
+        .login-btn { width: 100%; padding: 14px; background: #0f3460; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .login-btn:hover { background: #1a1a2e; }
+        .login-error { color: #dc3545; font-size: 13px; text-align: center; margin-top: 8px; min-height: 20px; }
+        
+        /* MAIN APP */
         .app-screen { display: none; }
-        .header { background: #fff; border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
-        .header-company { font-size: 10px; font-weight: 700; color: #999; letter-spacing: 1px; text-transform: uppercase; }
-        .header-store { font-size: 16px; font-weight: 800; color: #0f3460; }
-        .logout-btn { padding: 8px 16px; background: #dc3545; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
-
-        /* ===== NAV ===== */
-        .nav { display: flex; gap: 4px; background: rgba(255,255,255,0.15); border-radius: 12px; padding: 5px; margin-bottom: 12px; overflow-x: auto; }
-        .nav button { flex: 1; padding: 10px 6px; border: none; border-radius: 8px; background: transparent; color: rgba(255,255,255,0.8); font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
-        .nav button.active { background: #fff; color: #0f3460; }
-
-        /* ===== CARDS ===== */
-        .card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: none; margin-bottom: 12px; }
+        .header { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .header-emoji { font-size: 28px; }
+        .header-text { flex: 1; }
+        .header-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+        .header-subtitle { font-size: 11px; color: #999; }
+        .store-badge { background: #0f3460; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .logout-btn { padding: 8px 16px; background: #dc3545; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .logout-btn:hover { background: #c82333; }
+        
+        /* NAV */
+        .nav { display: flex; gap: 4px; margin-bottom: 12px; background: #fff; border-radius: 10px; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .nav button { flex: 1; padding: 10px 4px; border: none; border-radius: 8px; background: transparent; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; }
+        .nav button.active { background: #0f3460; color: #fff; }
+        
+        /* CARDS */
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: none; margin-bottom: 16px; }
         .card.active { display: block; }
-        .card-title { font-size: 17px; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
-
-        /* ===== FORMS ===== */
-        .form-group { margin-bottom: 14px; }
-        label { font-size: 12px; font-weight: 700; color: #555; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-        input, select { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 14px; outline: none; background: #fafafa; }
-        input:focus, select:focus { border-color: #0f3460; background: #fff; }
-        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        /* ===== BUTTONS ===== */
-        .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, #0f3460, #1a6fc4); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px; transition: opacity 0.2s; }
+        
+        h2 { font-size: 17px; margin-bottom: 14px; color: #1a1a2e; }
+        .form-group { margin-bottom: 12px; }
+        label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; display: block; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+        input:focus, select:focus { outline: none; border-color: #0f3460; }
+        
+        .btn-primary { width: 100%; padding: 14px; background: #0f3460; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .btn-primary:hover { background: #1a1a2e; }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-success { width: 100%; padding: 14px; background: linear-gradient(135deg, #28a745, #1a8a32); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
-        .btn-success:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-export { padding: 8px 14px; background: #17a2b8; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
-        .btn-refresh { padding: 8px 14px; background: #6c757d; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-left: 6px; }
-
-        /* ===== ALERTS ===== */
-        .msg-success { background: #d4edda; color: #155724; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-top: 12px; text-align: center; }
-        .msg-error { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-top: 12px; text-align: center; }
-        .msg-info { background: #d1ecf1; color: #0c5460; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; }
-
-        /* ===== TABLES ===== */
-        .filter-bar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-        .filter-bar input, .filter-bar select { flex: 1; min-width: 110px; padding: 10px; font-size: 13px; }
-        .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
-        .table-info { font-size: 12px; color: #888; }
-        .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #f0f0f0; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        thead tr { background: #f8f9fa; }
-        th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-        td { padding: 10px 12px; border-bottom: 1px solid #f5f5f5; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: #fafafa; }
-
-        /* ===== BADGES ===== */
-        .badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; }
-        .badge-IN { background: #d4edda; color: #155724; }
-        .badge-OUT { background: #f8d7da; color: #721c24; }
-        .badge-IMPORT { background: #d1ecf1; color: #0c5460; }
-
-        /* ===== QTY COLORS ===== */
-        .pos { color: #28a745; font-weight: 700; }
-        .neg { color: #dc3545; font-weight: 700; }
-        .zero { color: #ffc107; font-weight: 700; }
-
-        /* ===== SUMMARY CARDS ===== */
-        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
-        .summary-card { background: #f8f9fa; border-radius: 10px; padding: 12px; text-align: center; }
-        .summary-card .sv { font-size: 22px; font-weight: 900; color: #0f3460; }
-        .summary-card .sl { font-size: 10px; color: #888; margin-top: 2px; font-weight: 600; }
-
-        /* ===== PROGRESS ===== */
-        .progress-wrap { background: #e9ecef; border-radius: 8px; height: 8px; margin: 12px 0; overflow: hidden; display: none; }
-        .progress-bar { background: linear-gradient(90deg, #0f3460, #1a6fc4); height: 100%; border-radius: 8px; transition: width 0.4s; width: 0%; }
-
-        /* ===== IMPORT BOX ===== */
-        .import-box { border: 2px dashed #0f3460; padding: 22px; border-radius: 14px; text-align: center; background: #f8faff; margin: 14px 0; }
-
-        .loading-text { text-align: center; padding: 30px; color: #aaa; font-style: italic; }
+        
+        .btn-export { padding: 8px 14px; background: #28a745; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .btn-export:hover { background: #1e7e34; }
+        
+        .filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .filter-row select, .filter-row input { flex: 1; min-width: 100px; }
+        .header-row-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+        .loading { text-align: center; padding: 20px; color: #888; font-size: 14px; }
+        
+        .table-wrap { overflow-x: auto; margin-top: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #0f3460; color: #fff; padding: 10px 8px; text-align: left; white-space: nowrap; font-size: 12px; }
+        td { padding: 8px 8px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f0f4ff; }
+        tr:nth-child(even) { background: #fafafa; }
+        
+        .badge-in { background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 12px; font-weight: 600; font-size: 11px; }
+        .badge-out { background: #f8d7da; color: #721c24; padding: 3px 10px; border-radius: 12px; font-weight: 600; font-size: 11px; }
+        
+        .count-summary { display: flex; gap: 10px; margin-bottom: 12px; }
+        .count-card { flex: 1; background: #f8f9fa; border-radius: 10px; padding: 10px; text-align: center; }
+        .count-card .num { font-size: 22px; font-weight: 700; color: #0f3460; }
+        .count-card .label { font-size: 11px; color: #888; margin-top: 2px; }
+        
+        .stock-qty { font-weight: 700; font-size: 15px; }
+        .positive { color: #155724; }
+        .negative { color: #721c24; }
+        
+        /* FOOTER */
+        .footer { text-align: center; padding: 20px 10px 10px 10px; border-top: 1px solid rgba(255,255,255,0.15); margin-top: 10px; }
+        .footer-copy { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; }
+        .footer-dev { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 4px; }
+        .footer-dev strong { color: #f0c040; }
+        
+        @media (max-width: 400px) {
+            .nav button { font-size: 10px; padding: 8px 2px; }
+            .filter-row { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
-<div class="container">
-
-    <!-- =========== LOGIN =========== -->
+    <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="login-screen">
         <div class="login-box">
             <div class="login-logo">🏭</div>
-            <div class="login-company">Engineering Industries Factory</div>
-            <div class="login-title">EIF STORE</div>
-            <input type="password" id="passInput" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') login()">
+            <div class="login-title">ENGINEERING INDUSTRIES FACTORY</div>
+            <div class="login-subtitle">Inventory Management System</div>
+            <input type="password" id="passwordInput" class="login-input" placeholder="Enter Password" autocomplete="off" onkeypress="if(event.key==='Enter') login()">
             <button class="login-btn" onclick="login()">🔐 LOGIN</button>
-            <div id="loginErr" class="login-error"></div>
+            <div id="loginError" class="login-error"></div>
         </div>
     </div>
 
-    <!-- =========== APP =========== -->
+    <!-- MAIN APP -->
     <div id="appScreen" class="app-screen">
-
         <div class="header">
-            <div>
-                <div class="header-company">Engineering Industries Factory</div>
-                <div class="header-store" id="headerStore">—</div>
+            <div class="header-row">
+                <div class="header-emoji">🏭</div>
+                <div class="header-text">
+                    <div class="header-title">ENGINEERING INDUSTRIES FACTORY</div>
+                    <div class="header-subtitle">Inventory Management System</div>
+                </div>
+                <button class="logout-btn" onclick="logout()">🚪 Logout</button>
             </div>
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span id="userBadge" class="store-badge">👑 Master Admin</span>
+                <span id="storeFilterBadge" style="font-size:11px;color:#888;"></span>
+            </div>
         </div>
 
-        <div class="nav">
-            <button class="active" onclick="showTab('add',this)">➕ Add</button>
-            <button onclick="showTab('stock',this)">📦 Stock</button>
-            <button onclick="showTab('history',this)">📋 History</button>
-            <button onclick="showTab('monthly',this)">📅 Monthly</button>
-            <button id="importNavBtn" onclick="showTab('import',this)" style="display:none">📥 Import</button>
-        </div>
-
-        <!-- ======= TAB: ADD ======= -->
-        <div class="card active" id="tab-add">
-            <div class="card-title">➕ Add Transaction</div>
-            <div class="form-group">
-                <label>Store *</label>
-                <select id="addStore"></select>
+        <div class="container">
+            <!-- NAVIGATION -->
+            <div class="nav">
+                <button class="active" onclick="showTab('add')">➕ Add</button>
+                <button onclick="showTab('stock')">📊 Stock</button>
+                <button onclick="showTab('movement')">📈 Movement</button>
+                <button onclick="showTab('history')">📜 History</button>
             </div>
-            <div class="form-group">
-                <label>Type *</label>
-                <select id="addType">
-                    <option value="IN">📥 IN — Stock Received</option>
-                    <option value="OUT">📤 OUT — Stock Issued</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Item Name *</label>
-                <input type="text" id="addItem" placeholder="Enter item name...">
-            </div>
-            <div class="row2">
+            
+            <!-- TAB 1: ADD -->
+            <div class="card active" id="tab-add">
+                <h2>Add New Entry</h2>
                 <div class="form-group">
-                    <label>Quantity *</label>
-                    <input type="number" id="addQty" placeholder="0" min="1">
+                    <label>Store *</label>
+                    <select id="store"></select>
                 </div>
-                <div class="form-group">
-                    <label>DC No.</label>
-                    <input type="text" id="addDc" placeholder="Delivery note no.">
+                <div class="form-group"><label>Barcode (optional)</label><input type="text" id="barcode" placeholder="Scan or type"></div>
+                <div class="form-group"><label>Item Name *</label><input type="text" id="itemName" placeholder="Enter item name"></div>
+                <div class="form-group"><label>Quantity *</label><input type="number" id="qty" value="1"></div>
+                <div class="form-group"><label>DC No. *</label><input type="text" id="dcno" placeholder="DC-001"></div>
+                <div class="form-group"><label>Type *</label>
+                    <select id="type">
+                        <option value="IN">IN (Stock In)</option>
+                        <option value="OUT">OUT (Stock Out)</option>
+                    </select>
                 </div>
+                <button class="btn-primary" id="submitBtn" onclick="sendData()">💾 SAVE TO EXCEL</button>
+                <div id="message" style="text-align:center;margin-top:10px;font-weight:600;font-size:14px;"></div>
             </div>
-            <button class="btn-primary" id="saveBtn" onclick="saveTransaction()">💾 SAVE TRANSACTION</button>
-            <div id="saveMsg"></div>
-        </div>
-
-        <!-- ======= TAB: STOCK ======= -->
-        <div class="card" id="tab-stock">
-            <div class="card-title">📦 Live Stock Balance</div>
-            <div class="summary-grid" id="stockSummary"></div>
-            <div class="filter-bar">
-                <input type="text" id="stockSearch" placeholder="🔍 Search item..." oninput="renderStock()">
-                <select id="stockStore" onchange="renderStock()"></select>
-            </div>
-            <div class="table-toolbar">
-                <span class="table-info" id="stockInfo">—</span>
-                <div>
-                    <button class="btn-export" onclick="exportStock()">⬇️ Export</button>
-                    <button class="btn-refresh" onclick="loadAllData()">🔄</button>
+            
+            <!-- TAB 2: STOCK -->
+            <div class="card" id="tab-stock">
+                <div class="header-row-flex">
+                    <h2>📊 Stock Balance</h2>
+                    <button class="btn-export" onclick="exportCSV('stock')">📥 Export</button>
                 </div>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>#</th><th>Item Name</th><th>Store</th><th>Balance</th></tr></thead>
-                    <tbody id="stockBody"><tr><td colspan="4" class="loading-text">Loading...</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ======= TAB: HISTORY ======= -->
-        <div class="card" id="tab-history">
-            <div class="card-title">📋 Transaction History</div>
-            <div class="filter-bar">
-                <input type="text" id="histSearch" placeholder="🔍 Item / DC No..." oninput="renderHistory()">
-                <select id="histStore" onchange="renderHistory()"></select>
-            </div>
-            <div class="filter-bar">
-                <input type="date" id="histFrom" onchange="renderHistory()">
-                <input type="date" id="histTo" onchange="renderHistory()">
-                <select id="histType" onchange="renderHistory()">
-                    <option value="">All Types</option>
-                    <option value="IN">IN</option>
-                    <option value="OUT">OUT</option>
-                </select>
-            </div>
-            <div class="table-toolbar">
-                <span class="table-info" id="histInfo">—</span>
-                <div>
-                    <button class="btn-export" onclick="exportHistory()">⬇️ Export</button>
-                    <button class="btn-refresh" onclick="loadAllData()">🔄</button>
+                <div class="filter-row">
+                    <select id="stockStore" onchange="loadStock()"><option value="">All Stores</option></select>
+                    <input type="text" id="stockSearch" placeholder="🔍 Search item..." oninput="loadStock()">
                 </div>
+                <div class="count-summary" id="stockSum"></div>
+                <div id="stockContent"><div class="loading">⚙️ Loading...</div></div>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Date</th><th>Store</th><th>Item Name</th><th>Type</th><th>Qty</th><th>DC No.</th></tr></thead>
-                    <tbody id="histBody"><tr><td colspan="6" class="loading-text">Loading...</td></tr></tbody>
-                </table>
+            
+            <!-- TAB 3: MOVEMENT -->
+            <div class="card" id="tab-movement">
+                <div class="header-row-flex">
+                    <h2>📈 Monthly Movement</h2>
+                    <button class="btn-export" onclick="exportCSV('movement')">📥 Export</button>
+                </div>
+                <div class="filter-row">
+                    <select id="movMonth" onchange="loadMovement()">
+                        <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+                        <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+                        <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+                        <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+                    </select>
+                    <select id="movYear" onchange="loadMovement()"></select>
+                    <select id="movStore" onchange="loadMovement()"><option value="">All Stores</option></select>
+                </div>
+                <div id="movementContent"><div class="loading">⚙️ Loading...</div></div>
+            </div>
+            
+            <!-- TAB 4: HISTORY -->
+            <div class="card" id="tab-history">
+                <div class="header-row-flex">
+                    <h2>📜 Transaction History</h2>
+                    <button class="btn-export" onclick="exportCSV('history')">📥 Export</button>
+                </div>
+                <div class="filter-row">
+                    <select id="histStore" onchange="loadHistory()"><option value="">All Stores</option></select>
+                    <input type="text" id="histSearch" placeholder="🔍 Search item..." oninput="loadHistory()">
+                </div>
+                <div id="historyContent"><div class="loading">⚙️ Loading...</div></div>
             </div>
         </div>
-
-        <!-- ======= TAB: MONTHLY ======= -->
-        <div class="card" id="tab-monthly">
-            <div class="card-title">📅 Monthly Movement</div>
-            <div class="filter-bar">
-                <select id="monthStore" onchange="renderMonthly()"></select>
-                <input type="month" id="monthPicker" onchange="renderMonthly()">
-                <input type="text" id="monthSearch" placeholder="🔍 Search item..." oninput="renderMonthly()">
-            </div>
-            <div class="table-toolbar">
-                <span class="table-info" id="monthInfo">Select month to view</span>
-                <button class="btn-export" onclick="exportMonthly()">⬇️ Export</button>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>#</th><th>Item Name</th><th>Store</th><th>Total IN</th><th>Total OUT</th><th>Net</th></tr></thead>
-                    <tbody id="monthBody"><tr><td colspan="6" class="loading-text">Select a month above</td></tr></tbody>
-                </table>
-            </div>
+        
+        <!-- ============ FOOTER ============ -->
+        <div class="footer">
+            <p class="footer-copy">&copy; 2026 ENGINEERING INDUSTRIES FACTORY</p>
+            <p class="footer-dev">Developed by <strong>RAJU TAMANG</strong></p>
         </div>
+    </div>
 
-        <!-- ======= TAB: IMPORT (MASTER ONLY) ======= -->
-        <div class="card" id="tab-import">
-            <div class="card-title">📥 Import Opening Stock</div>
-            <div class="msg-info">
-                📌 <strong>Excel Column Rules (Must Follow):</strong><br>
-                <strong>Column D</strong> = Item Name &nbsp;|&nbsp; <strong>Column E</strong> = Quantity<br>
-                Row 1 = Header (will be skipped automatically)
-            </div>
-            <div class="form-group">
-                <label>Target Store *</label>
-                <select id="importStore">
-                    <option value="Store 1">Store 1</option>
-                    <option value="Store 2">Store 2</option>
-                    <option value="Store 3">Store 3</option>
-                </select>
-            </div>
-            <div class="import-box">
-                <div style="font-size:40px; margin-bottom:8px;">📂</div>
-                <p style="font-weight:700; color:#0f3460; margin-bottom:10px;">Select Excel File (.xlsx)</p>
-                <input type="file" id="excelFile" accept=".xlsx,.xls">
-                <p style="font-size:11px; color:#888; margin-top:8px;">Item Name → Column D &nbsp;|&nbsp; Quantity → Column E</p>
-            </div>
-            <div class="progress-wrap" id="progressWrap">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <button class="btn-success" id="importBtn" onclick="importFromFile()">🚀 START IMPORT</button>
-            <div id="importMsg"></div>
-        </div>
-
-    </div><!-- end appScreen -->
-</div><!-- end container -->
-
-<script>
-// =============================================================
-// ⚠️  PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
-// =============================================================
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzBXs7j3nv6CXGlPEwsgwyTiaGHJX3ZHCWlUi3PZBimSOl9-EfvOazcw-QMdoay-dFWKg/exec';
-// =============================================================
-
-// =============================================================
-// 🔐  PASSWORDS  (Change to your own passwords)
-// =============================================================
-const USERS = {
-    'STORE1': { label: 'Store 1',          store: 'Store 1', master: false },
-    'STORE2': { label: 'Store 2',          store: 'Store 2', master: false },
-    'STORE3': { label: 'Store 3',          store: 'Store 3', master: false },
-    'MASTER2026': { label: 'Master Admin', store: null,      master: true  }
-};
-// =============================================================
-
-let ME = null;          // logged-in user object
-let OPENING = [];       // data from "Opening Stock" sheet
-let TRANSACTIONS = [];  // data from "STOCK" sheet
-
-// ─────────────────── LOGIN ───────────────────
-function login() {
-    const p = document.getElementById('passInput').value.trim().toUpperCase();
-    if (USERS[p]) {
-        ME = USERS[p];
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'block';
-        initApp();
-    } else {
-        document.getElementById('loginErr').textContent = '❌ Wrong password. Try again.';
-    }
-}
-function logout() { location.reload(); }
-
-// ─────────────────── INIT APP ───────────────────
-function initApp() {
-    document.getElementById('headerStore').textContent = ME.label;
-
-    const allOpts  = '<option value="">All Stores</option><option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>';
-    const myOpt    = `<option value="${ME.store}">${ME.store}</option>`;
-    const allNoAll = '<option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>';
-
-    // Add tab
-    const addStore = document.getElementById('addStore');
-    addStore.innerHTML = ME.master ? allNoAll : myOpt;
-    if (!ME.master) addStore.disabled = true;
-
-    // Filters
-    ['stockStore','histStore','monthStore'].forEach(id => {
-        document.getElementById(id).innerHTML = ME.master ? allOpts : myOpt;
-        if (!ME.master) document.getElementById(id).disabled = true;
-    });
-
-    // Show Import for Master only
-    if (ME.master) document.getElementById('importNavBtn').style.display = 'flex';
-
-    // Default dates
-    const today = new Date();
-    const yyyy  = today.getFullYear();
-    const mm    = String(today.getMonth() + 1).padStart(2,'0');
-    const dd    = String(today.getDate()).padStart(2,'0');
-    document.getElementById('histTo').value   = `${yyyy}-${mm}-${dd}`;
-    document.getElementById('histFrom').value = `${yyyy}-${mm}-01`;
-    document.getElementById('monthPicker').value = `${yyyy}-${mm}`;
-
-    loadAllData();
-}
-
-// ─────────────────── SHOW TAB ───────────────────
-function showTab(id, btn) {
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + id).classList.add('active');
-    btn.classList.add('active');
-}
-
-// ─────────────────── LOAD ALL DATA ───────────────────
-async function loadAllData() {
-    try {
-        const res    = await fetch(SCRIPT_URL + '?action=getAll');
-        const result = await res.json();
-        OPENING      = result.opening  || [];
-        TRANSACTIONS = result.transactions || [];
-        renderStock();
-        renderHistory();
-        renderMonthly();
-    } catch(e) {
-        console.error(e);
-        setHTML('stockBody',   '<tr><td colspan="4" style="color:red;text-align:center">❌ Cannot connect. Check Apps Script URL.</td></tr>');
-        setHTML('histBody',    '<tr><td colspan="6" style="color:red;text-align:center">❌ Cannot connect.</td></tr>');
-        setHTML('monthBody',   '<tr><td colspan="6" style="color:red;text-align:center">❌ Cannot connect.</td></tr>');
-    }
-}
-
-// ─────────────────── SAVE TRANSACTION ───────────────────
-async function saveTransaction() {
-    const btn   = document.getElementById('saveBtn');
-    const store = document.getElementById('addStore').value;
-    const type  = document.getElementById('addType').value;
-    const item  = document.getElementById('addItem').value.trim();
-    const qty   = parseFloat(document.getElementById('addQty').value);
-    const dc    = document.getElementById('addDc').value.trim();
-
-    if (!item) return showMsg('saveMsg','error','❌ Item Name is required');
-    if (!qty || qty <= 0) return showMsg('saveMsg','error','❌ Quantity must be greater than 0');
-
-    btn.disabled = true; btn.textContent = '⏳ Saving...';
-    setHTML('saveMsg','');
-
-    try {
-        const payload = {
-            action: 'addTransaction',
-            store: store,
-            itemName: item,
-            qty: type === 'OUT' ? -Math.abs(qty) : Math.abs(qty),
-            type: type,
-            dcno: dc
+    <script>
+        // ============ CONFIGURATION ============
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzzaYFZ6tZozGLRZ7_UmzW4kEC8KqoNrOV3QtE-t8qP7MXwggWee79DBTEjwG8lspbVhA/exec'; // <--- PASTE YOUR URL
+        
+        const USERS = {
+            master: { password: 'EIF2026', store: null, label: '👑 Master Admin' },
+            store1: { password: 'STORE1',  store: 'Store 1', label: '🏪 Store 1' },
+            store2: { password: 'STORE2',  store: 'Store 2', label: '🏪 Store 2' },
+            store3: { password: 'STORE3',  store: 'Store 3', label: '🏪 Store 3' }
         };
-        const res    = await fetch(SCRIPT_URL, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
-        const result = await res.json();
-        if (result.status === 'success') {
-            showMsg('saveMsg','success','✅ Transaction saved successfully!');
-            document.getElementById('addItem').value = '';
-            document.getElementById('addQty').value  = '';
-            document.getElementById('addDc').value   = '';
-            await loadAllData();
-        } else {
-            showMsg('saveMsg','error','❌ ' + result.message);
-        }
-    } catch(e) {
-        showMsg('saveMsg','error','❌ ' + e.message);
-    } finally {
-        btn.disabled = false; btn.textContent = '💾 SAVE TRANSACTION';
-    }
-}
 
-// ─────────────────── STOCK BALANCE ───────────────────
-function renderStock() {
-    const search = document.getElementById('stockSearch').value.toLowerCase();
-    const store  = document.getElementById('stockStore').value || (ME.master ? '' : ME.store);
+        let currentUser = null;
+        let cachedData = { stock: [], movement: [], history: [] };
 
-    // Build balance map from Opening + Transactions
-    const map = {};
-    [...OPENING, ...TRANSACTIONS].forEach(row => {
-        if (!row.itemName) return;
-        if (store && row.store !== store) return;
-        const key = row.store + '|' + row.itemName;
-        if (!map[key]) map[key] = { store: row.store, itemName: row.itemName, qty: 0 };
-        map[key].qty += Number(row.qty) || 0;
-    });
-
-    let data = Object.values(map);
-    if (search) data = data.filter(x => x.itemName.toLowerCase().includes(search));
-    data.sort((a,b) => a.itemName.localeCompare(b.itemName));
-
-    const pos = data.filter(x => x.qty > 0).length;
-    const neg = data.filter(x => x.qty < 0).length;
-    setHTML('stockSummary', `
-        <div class="summary-card"><div class="sv">${data.length}</div><div class="sl">Total Items</div></div>
-        <div class="summary-card"><div class="sv" style="color:#28a745">${pos}</div><div class="sl">In Stock</div></div>
-        <div class="summary-card"><div class="sv" style="color:#dc3545">${neg}</div><div class="sl">Negative</div></div>
-    `);
-
-    document.getElementById('stockInfo').textContent = `Showing ${data.length} items`;
-
-    if (!data.length) { setHTML('stockBody','<tr><td colspan="4" class="loading-text">No items found</td></tr>'); return; }
-
-    setHTML('stockBody', data.map((r,i) => `
-        <tr>
-            <td>${i+1}</td>
-            <td>${r.itemName}</td>
-            <td>${r.store}</td>
-            <td class="${r.qty > 0 ? 'pos' : r.qty < 0 ? 'neg' : 'zero'}">${r.qty}</td>
-        </tr>
-    `).join(''));
-}
-
-// ─────────────────── HISTORY ───────────────────
-function renderHistory() {
-    const search = document.getElementById('histSearch').value.toLowerCase();
-    const store  = document.getElementById('histStore').value   || (ME.master ? '' : ME.store);
-    const from   = document.getElementById('histFrom').value;
-    const to     = document.getElementById('histTo').value;
-    const type   = document.getElementById('histType').value;
-
-    let data = [...TRANSACTIONS];
-    if (store)  data = data.filter(x => x.store === store);
-    if (type)   data = data.filter(x => x.type  === type);
-    if (from)   data = data.filter(x => x.date  >= from);
-    if (to)     data = data.filter(x => x.date  <= to);
-    if (search) data = data.filter(x =>
-        x.itemName.toLowerCase().includes(search) ||
-        (x.dcno || '').toLowerCase().includes(search)
-    );
-    data.sort((a,b) => b.date.localeCompare(a.date));
-
-    document.getElementById('histInfo').textContent = `${data.length} record(s) found`;
-    if (!data.length) { setHTML('histBody','<tr><td colspan="6" class="loading-text">No records found</td></tr>'); return; }
-
-    setHTML('histBody', data.map(r => `
-        <tr>
-            <td>${r.date}</td>
-            <td>${r.store}</td>
-            <td>${r.itemName}</td>
-            <td><span class="badge badge-${r.type}">${r.type}</span></td>
-            <td class="${r.qty > 0 ? 'pos' : 'neg'}">${r.qty > 0 ? '+' : ''}${r.qty}</td>
-            <td>${r.dcno || '—'}</td>
-        </tr>
-    `).join(''));
-}
-
-// ─────────────────── MONTHLY ───────────────────
-function renderMonthly() {
-    const store  = document.getElementById('monthStore').value  || (ME.master ? '' : ME.store);
-    const month  = document.getElementById('monthPicker').value;
-    const search = document.getElementById('monthSearch').value.toLowerCase();
-
-    if (!month) return;
-
-    let data = [...OPENING, ...TRANSACTIONS];
-    if (store)  data = data.filter(x => x.store === store);
-    data = data.filter(x => x.date && x.date.startsWith(month));
-    if (search) data = data.filter(x => x.itemName.toLowerCase().includes(search));
-
-    const map = {};
-    data.forEach(r => {
-        const key = r.store + '|' + r.itemName;
-        if (!map[key]) map[key] = { store: r.store, itemName: r.itemName, totalIn: 0, totalOut: 0 };
-        const q = Number(r.qty) || 0;
-        if (q > 0) map[key].totalIn  += q;
-        else        map[key].totalOut += Math.abs(q);
-    });
-
-    const result = Object.values(map).sort((a,b) => a.itemName.localeCompare(b.itemName));
-    document.getElementById('monthInfo').textContent = `${result.length} items moved in ${month}`;
-
-    if (!result.length) { setHTML('monthBody','<tr><td colspan="6" class="loading-text">No movement found for this month</td></tr>'); return; }
-
-    setHTML('monthBody', result.map((r,i) => {
-        const net = r.totalIn - r.totalOut;
-        return `
-            <tr>
-                <td>${i+1}</td>
-                <td>${r.itemName}</td>
-                <td>${r.store}</td>
-                <td class="pos">+${r.totalIn}</td>
-                <td class="neg">-${r.totalOut}</td>
-                <td class="${net >= 0 ? 'pos' : 'neg'}">${net >= 0 ? '+' : ''}${net}</td>
-            </tr>`;
-    }).join(''));
-}
-
-// ─────────────────── EXPORT (CSV) ───────────────────
-function exportStock() {
-    const rows = [['#','Item Name','Store','Balance']];
-    document.querySelectorAll('#stockBody tr').forEach(tr => {
-        const c = tr.querySelectorAll('td');
-        if (c.length >= 4) rows.push([c[0].textContent, c[1].textContent, c[2].textContent, c[3].textContent]);
-    });
-    downloadCSV(rows, 'Stock_Balance_' + today());
-}
-function exportHistory() {
-    const rows = [['Date','Store','Item Name','Type','Qty','DC No.']];
-    document.querySelectorAll('#histBody tr').forEach(tr => {
-        const c = tr.querySelectorAll('td');
-        if (c.length >= 6) rows.push([c[0].textContent, c[1].textContent, c[2].textContent, c[3].textContent.trim(), c[4].textContent, c[5].textContent]);
-    });
-    downloadCSV(rows, 'History_' + today());
-}
-function exportMonthly() {
-    const rows = [['#','Item Name','Store','Total IN','Total OUT','Net']];
-    document.querySelectorAll('#monthBody tr').forEach(tr => {
-        const c = tr.querySelectorAll('td');
-        if (c.length >= 6) rows.push([c[0].textContent, c[1].textContent, c[2].textContent, c[3].textContent, c[4].textContent, c[5].textContent]);
-    });
-    downloadCSV(rows, 'Monthly_' + document.getElementById('monthPicker').value);
-}
-function downloadCSV(rows, name) {
-    const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const a    = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = name + '.csv';
-    a.click();
-}
-
-// ─────────────────── IMPORT FROM EXCEL ───────────────────
-async function importFromFile() {
-    const fileInput = document.getElementById('excelFile');
-    const file      = fileInput.files[0];
-    const btn       = document.getElementById('importBtn');
-    const pw        = document.getElementById('progressWrap');
-    const pb        = document.getElementById('progressBar');
-
-    if (!file) return alert('Please select an Excel (.xlsx) file');
-
-    btn.disabled = true; btn.textContent = '⏳ Reading Excel...';
-    setHTML('importMsg', '');
-    pw.style.display = 'block'; pb.style.width = '15%';
-
-    try {
-        const store    = document.getElementById('importStore').value;
-        const buffer   = await file.arrayBuffer();
-        const workbook = XLSX.read(buffer, { type: 'array' });
-        const sheet    = workbook.Sheets[workbook.SheetNames[0]];
-        const rows     = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-        pb.style.width = '40%';
-
-        const items = [];
-        for (let i = 1; i < rows.length; i++) {           // i=1 skips header row
-            const row      = rows[i];
-            if (!row || row.length < 5) continue;
-            const itemName = String(row[3] || '').trim();  // Column D = index 3
-            const qty      = parseFloat(row[4]);           // Column E = index 4
-            if (itemName && !isNaN(qty)) items.push({ store, itemName, qty });
+        // ============ LOGIN ============
+        function login() {
+            const pwd = document.getElementById('passwordInput').value.trim().toUpperCase();
+            let found = null;
+            for (let key in USERS) {
+                if (USERS[key].password === pwd) { found = USERS[key]; break; }
+            }
+            if (found) {
+                currentUser = found;
+                localStorage.setItem('eifLogin', JSON.stringify({ store: found.store }));
+                showApp();
+            } else {
+                document.getElementById('loginError').innerHTML = '❌ Incorrect password. Please try again.';
+                document.getElementById('passwordInput').value = '';
+            }
         }
 
-        pb.style.width = '60%';
-        if (!items.length) throw new Error('No valid items found. Make sure Item Name is in Column D and Quantity in Column E.');
-
-        btn.textContent = `⏳ Uploading ${items.length} items...`;
-
-        const res    = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'importOpening', store, items })
-        });
-        pb.style.width = '85%';
-        const result = await res.json();
-        pb.style.width = '100%';
-
-        if (result.status === 'success') {
-            showMsg('importMsg', 'success', `✅ Successfully imported ${result.imported} items → Opening Stock (${store})`);
-            fileInput.value = '';
-            await loadAllData();
-        } else {
-            throw new Error(result.message || 'Server error');
+        function logout() {
+            localStorage.removeItem('eifLogin');
+            currentUser = null;
+            document.getElementById('appScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('loginError').innerHTML = '';
         }
-    } catch(e) {
-        showMsg('importMsg', 'error', '❌ ' + e.message);
-        pb.style.width = '0%';
-    } finally {
-        btn.disabled = false; btn.textContent = '🚀 START IMPORT';
-        setTimeout(() => { pw.style.display = 'none'; pb.style.width = '0%'; }, 2000);
-    }
-}
 
-// ─────────────────── HELPERS ───────────────────
-function setHTML(id, html)         { document.getElementById(id).innerHTML = html; }
-function showMsg(id, type, text)   { setHTML(id, `<div class="msg-${type}">${text}</div>`); }
-function today()                   { return new Date().toISOString().split('T')[0]; }
-</script>
+        function checkLogin() {
+            const saved = localStorage.getItem('eifLogin');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    for (let key in USERS) {
+                        if (USERS[key].store === data.store) { currentUser = USERS[key]; showApp(); return; }
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'block';
+            document.getElementById('userBadge').textContent = currentUser.label;
+            const filterBadge = document.getElementById('storeFilterBadge');
+            filterBadge.innerHTML = currentUser.store ? `🔒 Viewing: <strong>${currentUser.store}</strong> only` : '👑 Viewing all stores';
+            setupStoreDropdown();
+            setupStoreFilters();
+            loadStores();
+            populateYears();
+        }
+
+        function setupStoreDropdown() {
+            const sel = document.getElementById('store');
+            sel.innerHTML = currentUser.store ? `<option value="${currentUser.store}">${currentUser.store}</option>` : '<option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option>';
+            sel.disabled = !!currentUser.store;
+        }
+
+        function setupStoreFilters() {
+            ['stockStore','histStore','movStore'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (currentUser.store) { sel.innerHTML = `<option value="${currentUser.store}">${currentUser.store}</option>`; sel.disabled = true; }
+                else sel.disabled = false;
+            });
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            if(tab === 'stock') loadStock();
+            if(tab === 'movement') loadMovement();
+            if(tab === 'history') loadHistory();
+        }
+
+        async function sendData() {
+            const btn = document.getElementById('submitBtn');
+            const msg = document.getElementById('message');
+            const payload = {
+                store: document.getElementById('store').value,
+                barcode: document.getElementById('barcode').value,
+                itemName: document.getElementById('itemName').value,
+                qty: document.getElementById('qty').value,
+                type: document.getElementById('type').value,
+                dcno: document.getElementById('dcno').value
+            };
+            if(!payload.itemName || !payload.dcno) { msg.innerHTML = '<span style="color:red;">❌ Please fill Item Name and DC No.</span>'; return; }
+            btn.disabled = true; btn.innerText = "Saving...";
+            try {
+                const r = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
+                const t = await r.text();
+                if (t.includes("Success")) {
+                    msg.innerHTML = '<span style="color:green;">✅ Saved Successfully!</span>';
+                    document.getElementById('itemName').value = ""; document.getElementById('barcode').value = "";
+                    document.getElementById('qty').value = "1"; document.getElementById('dcno').value = "";
+                } else { msg.innerHTML = '<span style="color:red;">❌ Error: ' + t + '</span>'; }
+            } catch(e) { msg.innerHTML = '<span style="color:red;">❌ Connection error</span>'; }
+            btn.disabled = false; btn.innerText = "💾 SAVE TO EXCEL";
+        }
+
+        async function loadStores() {
+            try {
+                const r = await fetch(scriptURL + '?action=getStores');
+                const stores = await r.json();
+                if (currentUser.store) return;
+                ['stockStore','histStore','movStore'].forEach(id => {
+                    const sel = document.getElementById(id);
+                    if (sel.disabled) return;
+                    sel.innerHTML = '<option value="">All Stores</option>';
+                    stores.forEach(s => sel.innerHTML += `<option value="${s}">${s}</option>`);
+                });
+            } catch(e) {}
+        }
+
+        async function loadStock() {
+            const div = document.getElementById('stockContent');
+            div.innerHTML = '<div class="loading">⚙️ Loading...</div>';
+            try {
+                const r = await fetch(scriptURL + '?action=getStock');
+                let data = await r.json();
+                if (currentUser.store) data = data.filter(d => d.store === currentUser.store);
+                cachedData.stock = data;
+                const store = document.getElementById('stockStore').value;
+                const search = document.getElementById('stockSearch').value.toLowerCase();
+                let filtered = data;
+                if (store) filtered = filtered.filter(d => d.store === store);
+                if (search) filtered = filtered.filter(d => d.itemName.toLowerCase().includes(search));
+                document.getElementById('stockSum').innerHTML = `<div class="count-card"><div class="num">${filtered.length}</div><div class="label">Items</div></div><div class="count-card"><div class="num">${filtered.reduce((s,d)=>s+d.qty,0)}</div><div class="label">Total Qty</div></div>`;
+                if (filtered.length === 0) { div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No stock data found</div>'; return; }
+                let h = '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>Balance</th></tr>';
+                filtered.forEach(d => h += `<tr><td>${d.store}</td><td>${d.itemName}</td><td class="stock-qty ${d.qty >= 0 ? 'positive' : 'negative'}">${d.qty}</td></tr>`);
+                div.innerHTML = h + '</table></div>';
+            } catch(e) { div.innerHTML = '<div class="loading" style="color:red;">❌ Error loading data</div>'; }
+        }
+
+        function populateYears() {
+            const sel = document.getElementById('movYear');
+            const curY = new Date().getFullYear();
+            sel.innerHTML = '';
+            for(let i=0; i<3; i++) sel.innerHTML += `<option value="${curY-i}">${curY-i}</option>`;
+        }
+
+        async function loadMovement() {
+            const div = document.getElementById('movementContent');
+            div.innerHTML = '<div class="loading">⚙️ Loading...</div>';
+            try {
+                const m = document.getElementById('movMonth').value;
+                const y = document.getElementById('movYear').value;
+                const s = document.getElementById('movStore').value;
+                let url = `${scriptURL}?action=getMonthlyMovement&month=${m}&year=${y}`;
+                if (currentUser.store) url += `&store=${encodeURIComponent(currentUser.store)}`;
+                else if (s) url += `&store=${encodeURIComponent(s)}`;
+                const r = await fetch(url);
+                let data = await r.json();
+                if (currentUser.store) data = data.filter(d => d.store === currentUser.store);
+                cachedData.movement = data;
+                if (data.length === 0) { div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No movement data</div>'; return; }
+                let h = '<div class="table-wrap"><table><tr><th>Store</th><th>Item</th><th>Opening</th><th>IN</th><th>OUT</th><th>Closing</th></tr>';
+                data.forEach(d => h += `<tr><td>${d.store}</td><td>${d.itemName}</td><td>${d.opening}</td><td class="positive">+${d.inQty}</td><td class="negative">-${d.outQty}</td><td class="stock-qty ${d.closing >= 0 ? 'positive' : 'negative'}">${d.closing}</td></tr>`);
+                div.innerHTML = h + '</table></div>';
+            } catch(e) { div.innerHTML = '<div class="loading" style="color:red;">❌ Error loading data</div>'; }
+        }
+
+        async function loadHistory() {
+            const div = document.getElementById('historyContent');
+            div.innerHTML = '<div class="loading">⚙️ Loading...</div>';
+            try {
+                let url = scriptURL + '?action=getHistory';
+                if (currentUser.store) url += `&store=${encodeURIComponent(currentUser.store)}`;
+                else { const s = document.getElementById('histStore').value; if (s) url += `&store=${encodeURIComponent(s)}`; }
+                const q = document.getElementById('histSearch').value;
+                if (q) url += `&item=${encodeURIComponent(q)}`;
+                const r = await fetch(url);
+                let data = await r.json();
+                if (currentUser.store) data = data.filter(d => d.store === currentUser.store);
+                cachedData.history = data;
+                if (data.length === 0) { div.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📭 No transactions found</div>'; return; }
+                let h = '<div class="table-wrap"><table><tr><th>Date</th><th>Store</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No.</th></tr>';
+                data.forEach(d => {
+                    const date = d.timestamp ? d.timestamp.substring(0, 16) : '';
+                    h += `<tr><td>${date}</td><td>${d.store}</td><td>${d.itemName}</td><td>${d.qty}</td><td><span class="badge-${d.type.toLowerCase()}">${d.type}</span></td><td>${d.dcno}</td></tr>`;
+                });
+                div.innerHTML = h + '</table></div>';
+            } catch(e) { div.innerHTML = '<div class="loading" style="color:red;">❌ Error loading data</div>'; }
+        }
+
+        function exportCSV(type) {
+            const data = cachedData[type];
+            if(!data || data.length === 0) return alert("No data to export");
+            let headers = Object.keys(data[0]);
+            let csv = headers.join(',') + '\n';
+            data.forEach(row => { csv += headers.map(h => `"${(row[h]||'').toString().replace(/"/g,'""')}"`).join(',') + '\n'; });
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${type}_${new Date().toISOString().substring(0,10)}.csv`;
+            a.click();
+        }
+
+        checkLogin();
+    </script>
 </body>
 </html>
