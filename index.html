@@ -105,7 +105,7 @@
     <div class="container">
        <div class="nav">
     <button class="nav-btn active" onclick="showTab('add', this)">➕ Add</button>
-    <button class="nav-btn" onclick="showTab('stock', this)">📊 Stock</button>
+    <button class="nav-btn" onclick="showTab('', this)">📊 </button>
     <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)">📥 Import</button>
     <button class="nav-btn" onclick="showTab('movement', this)">📈 Movement</button>
     <button class="nav-btn" onclick="showTab('history', this)">📜 History</button>
@@ -119,7 +119,7 @@
             <div class="form-group"><label>Item Name *</label><input type="text" id="itemName" placeholder="Enter item name"></div>
             <div class="form-group"><label>Quantity *</label><input type="number" id="qty" value="1" min="0"></div>
             <div class="form-group"><label>DC No. *</label><input type="text" id="dcno" placeholder="e.g. DC-001"></div>
-            <div class="form-group"><label>Type *</label><select id="type"><option value="IN">⬆️ IN (Stock In)</option><option value="OUT">⬇️ OUT (Stock Out)</option></select></div>
+            <div class="form-group"><label>Type *</label><select id="type"><option value="IN">⬆️ IN ( In)</option><option value="OUT">⬇️ OUT ( Out)</option></select></div>
             <button class="btn-primary" id="submitBtn" onclick="sendData()">💾 SAVE</button>
             <div id="message" style="margin-top:10px;"></div>
         </div>
@@ -135,38 +135,77 @@
 <div id="stockContent">⚙️ Loading...</div>
 
 
-        <!-- MOVEMENT TAB -->
-        <div class="card" id="tab-movement">
-            <div class="top-row"><h2>📈 Monthly Movement</h2><button class="btn-export" onclick="exportCSV('movement')">📥 Export</button></div>
-            <div class="filter-row">
-               <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-    <select id="movementYear" onchange="renderMovement()" style="min-width:110px;padding:6px;border-radius:6px;"></select>
-    <select id="movementMonth" onchange="renderMovement()" style="min-width:140px;padding:6px;border-radius:6px;"></select>
-    <select id="movementStoreFilter" onchange="renderMovement()" style="min-width:150px;padding:6px;border-radius:6px;"></select>
+       <div class="card" id="tab-movement">
+    <h2>📈 Stock Movement</h2>
+
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <select id="movementYear" onchange="renderMovement()"
+            style="min-width:110px;padding:8px;border-radius:6px;border:1px solid #ccc;">
+        </select>
+        <select id="movementMonth" onchange="renderMovement()"
+            style="min-width:140px;padding:8px;border-radius:6px;border:1px solid #ccc;">
+        </select>
+        <select id="movementStoreFilter" onchange="renderMovement()"
+            style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ccc;">
+        </select>
+        <button onclick="loadMovement()"
+            style="padding:8px 16px;background:#0d6efd;color:white;border:none;border-radius:6px;cursor:pointer;">
+            🔄 Refresh
+        </button>
+    </div>
+
+    <div id="movementContent" style="margin-top:10px;">⚙️ Loading...</div>
 </div>
-<div id="movementContent">⚙️ Loading...</div>
 
 
-        <!-- HISTORY TAB -->
-        <div class="card" id="tab-history">
-            <div class="top-row"><h2>📜 Transaction History</h2><button class="btn-export" onclick="exportCSV('history')">📥 Export</button></div>
-            <div class="filter-row">
-                <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-    <select id="historyStoreFilter" onchange="renderHistory()" style="min-width:150px;padding:6px;border-radius:6px;"></select>
-    <input type="text" id="historySearch" placeholder="🔍 Search item..." oninput="renderHistory()" style="flex:1;padding:6px;border-radius:6px;border:1px solid #ccc;">
+
+       <div class="card" id="tab-history">
+    <h2>📜 Transaction History</h2>
+
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <select id="historyStoreFilter" onchange="renderHistory()"
+            style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ccc;">
+        </select>
+        <input type="text" id="historySearch" placeholder="🔍 Search item..."
+            oninput="renderHistory()"
+            style="flex:1;min-width:180px;padding:8px;border-radius:6px;border:1px solid #ccc;">
+        <button onclick="loadHistory()"
+            style="padding:8px 16px;background:#0d6efd;color:white;border:none;border-radius:6px;cursor:pointer;">
+            🔄 Refresh
+        </button>
+    </div>
+
+    <div id="historyContent" style="margin-top:10px;">⚙️ Loading...</div>
 </div>
-<div id="historyContent">⚙️ Loading...</div>
 
 
-        <!-- IMPORT TAB -->
         <div class="card" id="tab-import">
-            <h2>📥 Import Opening Stock</h2>
-            <div class="form-group"><label>Select Store *</label><select id="importStore"><option value="Store 1">Store 1</option><option value="Store 2">Store 2</option><option value="Store 3">Store 3</option></select></div>
-            
-            <div class="import-section">
-                <h3>📁 Upload Excel / CSV File</h3>
-                <input type="file" id="excelFile" class="import-file-input" accept=".xlsx,.xls,.csv">
-                <button class="btn-success" id="uploadBtn" onclick="importFromFile()"
+    <h2>📥 Import Opening Stock</h2>
+    <div class="form-group">
+        <label>Select Store *</label>
+        <select id="importStore">
+            <option value="Store 1">Store 1</option>
+            <option value="Store 2">Store 2</option>
+            <option value="Store 3">Store 3</option>
+        </select>
+    </div>
+
+    <div class="import-section">
+        <h3>📁 Upload Excel / CSV File</h3>
+        <input type="file" id="excelFile" class="import-file-input" accept=".xlsx,.xls,.csv">
+        <button class="btn-success" id="uploadBtn" onclick="importFromFile()">📤 UPLOAD & IMPORT FILE</button>
+    </div>
+
+    <div class="divider"><hr><span>OR</span><hr></div>
+
+    <div class="import-section">
+        <h3>📋 Paste from Excel</h3>
+        <textarea id="importData" style="height:150px;margin-bottom:8px;" placeholder="Copy from Excel and paste here (Column A = Item Name, Column B = Quantity)"></textarea>
+        <button class="btn-success" id="pasteBtn" onclick="processImport()">📥 IMPORT PASTED DATA</button>
+    </div>
+    <div id="importMsg" style="margin-top:12px;"></div>
+</div>
+
 >📤 UPLOAD & IMPORT FILE</button>
             </div>
             
