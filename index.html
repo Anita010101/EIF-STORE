@@ -4,272 +4,581 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIF Inventory Manager</title>
-    
-    <!-- Load XLSX Library FIRST -->
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
-        
-        .screen { display: none; }
-        .screen.active { display: block; }
-        
-        /* LOGIN SCREEN */
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd1;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        /* Login Screen */
         #loginScreen {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         }
+
         .login-box {
             background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
+            text-align: center;
         }
-        .login-box h1 { color: #333; margin-bottom: 8px; }
-        .login-box p { color: #666; margin-bottom: 24px; font-size: 14px; }
+
+        .login-box h1 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .login-box p {
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
         .login-box input {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 16px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
         }
+
+        .login-box input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
         .login-box button {
             width: 100%;
-            padding: 12px;
-            background: #667eea;
+            padding: 0.8rem;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: var(--transition);
         }
-        .login-box button:hover { background: #764ba2; }
-        #loginError { color: red; margin-bottom: 12px; font-size: 14px; }
-        
-        /* APP SCREEN */
+
+        .login-box button:hover {
+            background: var(--primary-dark);
+        }
+
+        #loginError {
+            color: var(--danger);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* App Screen */
         #appScreen {
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            background: #f5f5f5;
+            background-color: #f5f5f5;
         }
-        
+
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 20px;
+            padding: 1rem 1.5rem;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .header h1 { font-size: 28px; margin-bottom: 8px; }
-        #userBadge { 
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        #userBadge {
             display: inline-block;
-            background: rgba(255,255,255,0.3);
-            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.3rem 0.8rem;
             border-radius: 20px;
-            font-size: 14px;
-            margin-right: 12px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(5px);
         }
+
         .logout-btn {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.2);
             color: white;
-            border: 1px solid white;
-            padding: 6px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.3rem 0.8rem;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 0.8rem;
+            transition: var(--transition);
         }
-        .logout-btn:hover { background: rgba(255,255,255,0.5); }
-        
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Navigation */
         .nav {
             background: white;
             display: flex;
-            gap: 0;
             padding: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: var(--box-shadow);
             overflow-x: auto;
+            position: sticky;
+            top: 60px;
+            z-index: 90;
         }
+
         .nav-btn {
             flex: 1;
-            padding: 14px 16px;
+            padding: 0.8rem 1rem;
             border: none;
             background: white;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 0.9rem;
             font-weight: 500;
-            color: #666;
+            color: #555;
             border-bottom: 3px solid transparent;
             white-space: nowrap;
             min-width: 120px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
-        .nav-btn:hover { background: #f8f9fa; }
-        .nav-btn.active { color: #667eea; border-bottom-color: #667eea; }
-        
+
+        .nav-btn:hover {
+            background: var(--light);
+        }
+
+        .nav-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .nav-btn i {
+            font-size: 1.1rem;
+        }
+
+        /* Main Container */
         .container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
         }
-        
+
+        /* Cards */
         .card {
             display: none;
             background: white;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1.5rem;
         }
-        .card.active { display: block; }
-        .card h2 { color: #333; margin-bottom: 20px; font-size: 24px; }
-        
+
+        .card.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card h2 {
+            color: var(--dark);
+            margin-bottom: 1.2rem;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h2 i {
+            font-size: 1.3rem;
+        }
+
+        /* Form Elements */
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 1rem;
         }
+
         .form-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 0.4rem;
             font-weight: 500;
-            color: #333;
+            color: var(--dark);
+            font-size: 0.9rem;
         }
+
         .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-group select {
             width: 100%;
-            padding: 10px;
+            padding: 0.7rem 0.9rem;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: inherit;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
         }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
         .form-row {
             display: flex;
-            gap: 12px;
+            gap: 1rem;
             flex-wrap: wrap;
+            margin-bottom: 0.5rem;
         }
+
         .form-row .form-group {
             flex: 1;
             min-width: 150px;
         }
-        
-        .btn-primary, .btn-success, .btn-danger {
-            padding: 10px 16px;
+
+        /* Buttons */
+        .btn {
+            padding: 0.7rem 1.2rem;
             border: none;
-            border-radius: 6px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
-        .btn-primary { background: #0d6efd; color: white; }
-        .btn-primary:hover { background: #0b5ed7; }
-        .btn-success { background: #198754; color: white; }
-        .btn-success:hover { background: #157347; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-danger:hover { background: #bb2d3b; }
-        
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 12px;
+            margin: 1rem 0;
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
-        thead { background: #f8f9fa; }
-        th { padding: 12px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #ddd; }
-        td { padding: 12px; border-bottom: 1px solid #ddd; }
-        tr:hover { background: #f8f9fa; }
-        
-        .import-section { margin: 20px 0; padding: 16px; background: #f8f9fa; border-radius: 6px; }
-        .import-file-input { padding: 12px; margin-bottom: 12px; }
-        .divider { display: flex; align-items: center; margin: 24px 0; gap: 12px; }
-        .divider hr { flex: 1; border: none; border-top: 1px solid #ddd; }
-        .divider span { color: #999; font-weight: 500; }
-        
-        textarea { resize: vertical; }
-        
-        #addResult {
-            margin-top: 16px;
-            padding: 12px;
-            border-radius: 6px;
+
+        thead {
+            background: var(--light);
+        }
+
+        th {
+            padding: 0.8rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid #eee;
+        }
+
+        td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: rgba(102, 126, 234, 0.03);
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 0.8rem 1rem;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
             display: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
         }
-        #addResult.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; display: block; }
-        #addResult.error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; display: block; }
-        
+
+        .alert.success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            color: #155724;
+            display: flex;
+        }
+
+        .alert.error {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            color: #721c24;
+            display: flex;
+        }
+
+        .alert i {
+            font-size: 1.1rem;
+        }
+
+        /* Import Section */
+        .import-section {
+            margin: 1.5rem 0;
+            padding: 1.2rem;
+            background: var(--light);
+            border-radius: var(--border-radius);
+            border: 1px dashed #ddd;
+        }
+
+        .import-section h3 {
+            margin-bottom: 0.8rem;
+            color: var(--dark);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #excelFile {
+            width: 100%;
+            padding: 0.7rem;
+            margin-bottom: 0.8rem;
+            border: 1px dashed #ccc;
+            border-radius: var(--border-radius);
+            background: white;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            resize: vertical;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            gap: 1rem;
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Guide Box */
         .guide-box {
-            margin-top: 24px;
-            padding: 16px;
-            background: #f0f8ff;
-            border-radius: 8px;
+            margin-top: 1.5rem;
+            padding: 1.2rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary);
         }
-        .guide-box h3 { margin-bottom: 8px; }
-        .guide-box p { margin-bottom: 4px; }
-        .guide-box .small { color: #666; margin-top: 8px; font-size: 13px; }
+
+        .guide-box h3 {
+            margin-bottom: 0.6rem;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .guide-box p {
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .guide-box .small {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.6rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+
+            .nav-btn {
+                flex: 1 0 45%;
+                margin: 0.3rem;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .login-box {
+                padding: 1.5rem;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 0.6rem;
+            }
+
+            .btn {
+                padding: 0.6rem;
+            }
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
     <div class="login-box">
-        <h1>🔐 EIF Inventory</h1>
+        <h1><i class="fas fa-lock"></i> EIF Inventory</h1>
         <p>ENGINEERING INDUSTRIES FACTORY</p>
         <div id="loginError"></div>
         <input type="password" id="passwordInput" placeholder="Enter Password" onkeypress="if(event.key==='Enter') login()">
-        <button onclick="login()">🔓 Login</button>
+        <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
     </div>
 </div>
 
 <!-- APP SCREEN -->
 <div id="appScreen" class="screen">
     <div class="header">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="header-content">
             <div>
-                <h1>📦 EIF Inventory Manager</h1>
+                <h1><i class="fas fa-boxes"></i> EIF Inventory Manager</h1>
                 <span id="userBadge"></span>
             </div>
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </div>
 
     <!-- NAVIGATION -->
     <div class="nav">
-        <button class="nav-btn active" onclick="showTab('stock', this)">📊 Live Balance</button>
-        <button class="nav-btn" onclick="showTab('add', this)">➕ Add Stock</button>
-        <button class="nav-btn" onclick="showTab('history', this)">📜 History</button>
-        <button class="nav-btn" onclick="showTab('movement', this)">📈 Movement</button>
-        <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)" style="display:none;">📥 Import</button>
+        <button class="nav-btn active" onclick="showTab('stock', this)"><i class="fas fa-chart-pie"></i> Live Balance</button>
+        <button class="nav-btn" onclick="showTab('add', this)"><i class="fas fa-plus-circle"></i> Add Stock</button>
+        <button class="nav-btn" onclick="showTab('history', this)"><i class="fas fa-history"></i> History</button>
+        <button class="nav-btn" onclick="showTab('movement', this)"><i class="fas fa-chart-line"></i> Movement</button>
+        <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)"><i class="fas fa-file-import"></i> Import</button>
     </div>
 
     <div class="container">
 
         <!-- STOCK TAB -->
         <div class="card active" id="tab-stock">
-            <h2>📊 Live Stock Balance</h2>
-            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-                <select id="stockStoreFilter" onchange="renderStock()" 
-                    style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+            <h2><i class="fas fa-chart-pie"></i> Live Stock Balance</h2>
+            <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                <select id="stockStoreFilter" onchange="renderStock()"
+                    style="min-width:150px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
                 </select>
-                <input type="text" id="stockSearch" placeholder="🔍 Search item..." 
-                    oninput="renderStock()" 
-                    style="flex:1;min-width:180px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                <input type="text" id="stockSearch" placeholder="🔍 Search item..."
+                    oninput="renderStock()"
+                    style="flex:1;min-width:180px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
             </div>
             <div id="stockContent">⏳ Loading...</div>
         </div>
 
-        <!-- ADD STOCK TAB - NEW -->
+        <!-- ADD STOCK TAB -->
         <div class="card" id="tab-add">
-            <h2>➕ Add Stock Transaction</h2>
+            <h2><i class="fas fa-plus-circle"></i> Add Stock Transaction</h2>
             <div id="addResult"></div>
-            
+
             <div class="form-row">
                 <div class="form-group">
-                    <label>🏪 Store *</label>
+                    <label><i class="fas fa-store"></i> Store *</label>
                     <select id="addStore">
                         <option value="">Select Store</option>
                         <option value="Store 1">Store 1</option>
@@ -278,7 +587,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>📦 Type *</label>
+                    <label><i class="fas fa-exchange-alt"></i> Type *</label>
                     <select id="addType">
                         <option value="">Select Type</option>
                         <option value="IN">📥 IN (Stock In)</option>
@@ -288,28 +597,28 @@
             </div>
 
             <div class="form-group">
-                <label>📝 Item Name *</label>
+                <label><i class="fas fa-box"></i> Item Name *</label>
                 <input type="text" id="addItemName" placeholder="Enter item name" list="itemSuggestions">
                 <datalist id="itemSuggestions"></datalist>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>🔢 Quantity *</label>
+                    <label><i class="fas fa-sort-numeric-up"></i> Quantity *</label>
                     <input type="number" id="addQty" placeholder="0" min="0" step="any">
                 </div>
                 <div class="form-group">
-                    <label>📄 DC No.</label>
+                    <label><i class="fas fa-file-alt"></i> DC No.</label>
                     <input type="text" id="addDcNo" placeholder="Optional">
                 </div>
             </div>
 
-            <button class="btn-success" onclick="addStock()" style="width:100%;padding:12px;font-size:16px;margin-top:8px;">
-                ✅ SUBMIT STOCK
+            <button class="btn btn-success btn-block" onclick="addStock()">
+                <i class="fas fa-check-circle"></i> SUBMIT STOCK
             </button>
 
             <div class="guide-box">
-                <h3>📌 Quick Guide</h3>
+                <h3><i class="fas fa-info-circle"></i> Quick Guide</h3>
                 <p><strong>IN</strong> = Stock coming into store (purchase, transfer in)</p>
                 <p><strong>OUT</strong> = Stock leaving store (sale, transfer out, wastage)</p>
                 <p class="small">✅ After submission, check Live Balance to see updated stock!</p>
@@ -318,30 +627,30 @@
 
         <!-- HISTORY TAB -->
         <div class="card" id="tab-history">
-            <h2>📜 Transaction History</h2>
-            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-                <select id="historyStoreFilter" onchange="renderHistory()" 
-                    style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+            <h2><i class="fas fa-history"></i> Transaction History</h2>
+            <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                <select id="historyStoreFilter" onchange="renderHistory()"
+                    style="min-width:150px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
                 </select>
-                <input type="text" id="historySearch" placeholder="🔍 Search item..." 
-                    oninput="renderHistory()" 
-                    style="flex:1;min-width:180px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                <input type="text" id="historySearch" placeholder="🔍 Search item..."
+                    oninput="renderHistory()"
+                    style="flex:1;min-width:180px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
             </div>
             <div id="historyContent">⏳ Loading...</div>
         </div>
 
         <!-- MOVEMENT TAB -->
         <div class="card" id="tab-movement">
-            <h2>📈 Stock Movement</h2>
-            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-                <select id="movementYear" onchange="renderMovement()" 
-                    style="min-width:110px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+            <h2><i class="fas fa-chart-line"></i> Stock Movement</h2>
+            <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                <select id="movementYear" onchange="renderMovement()"
+                    style="min-width:110px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
                 </select>
-                <select id="movementMonth" onchange="renderMovement()" 
-                    style="min-width:140px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                <select id="movementMonth" onchange="renderMovement()"
+                    style="min-width:140px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
                 </select>
-                <select id="movementStoreFilter" onchange="renderMovement()" 
-                    style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
+                <select id="movementStoreFilter" onchange="renderMovement()"
+                    style="min-width:150px;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
                 </select>
             </div>
             <div id="movementContent">⏳ Loading...</div>
@@ -349,11 +658,11 @@
 
         <!-- IMPORT TAB -->
         <div class="card" id="tab-import">
-            <h2>📥 Import Opening Stock</h2>
-            
+            <h2><i class="fas fa-file-import"></i> Import Opening Stock</h2>
+
             <div class="form-group">
-                <label>📍 Select Store *</label>
-                <select id="importStore" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
+                <label><i class="fas fa-store"></i> Select Store *</label>
+                <select id="importStore" style="width:100%;padding:0.7rem;border-radius:var(--border-radius);border:1px solid #ddd;">
                     <option value="Store 1">Store 1</option>
                     <option value="Store 2">Store 2</option>
                     <option value="Store 3">Store 3</option>
@@ -361,17 +670,21 @@
             </div>
 
             <div class="import-section">
-                <h3>📁 Upload Excel / CSV</h3>
-                <input type="file" id="excelFile" class="import-file-input" accept=".xlsx,.xls,.csv">
-                <button class="btn-success" id="uploadBtn" onclick="importFromFile()" style="width:100%;">📤 UPLOAD & IMPORT</button>
+                <h3><i class="fas fa-file-excel"></i> Upload Excel / CSV</h3>
+                <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
+                <button class="btn btn-success btn-block" id="uploadBtn" onclick="importFromFile()">
+                    <i class="fas fa-upload"></i> UPLOAD & IMPORT
+                </button>
             </div>
 
-            <div class="divider"><hr><span>OR</span><hr></div>
+            <div class="divider">OR</div>
 
             <div class="import-section">
-                <h3>📋 Paste from Excel</h3>
-                <textarea id="importData" style="width:100%;height:150px;padding:10px;border:1px solid #ddd;border-radius:6px;font-family:monospace;" placeholder="Copy from Excel and paste here (Column A = Item Name, Column B = Qty)"></textarea>
-                <button class="btn-success" onclick="processImport()" style="width:100%;margin-top:8px;">📥 IMPORT PASTED DATA</button>
+                <h3><i class="fas fa-paste"></i> Paste from Excel</h3>
+                <textarea id="importData" placeholder="Copy from Excel and paste here (Column A = Item Name, Column B = Qty)"></textarea>
+                <button class="btn btn-success btn-block" onclick="processImport()">
+                    <i class="fas fa-file-import"></i> IMPORT PASTED DATA
+                </button>
             </div>
         </div>
 
@@ -380,7 +693,7 @@
 
 <script>
 // ===================== CONFIG =====================
-const scriptURL = 'https://script.google.com/macros/s/AKfycbzH1S9VK2KQq_oVF51V6yaWG7pIBscAN20ldGNL0KuwV98oohyduVDKg79lDhBrjcSnOw/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbyKO6yNCtdrfNI4JNbVfVXPAKR1nedXof9xTS2urzsM4AauxMy4B7GXm058BCBgin-WEA/exec'; // Replace with your actual Apps Script URL
 
 const USERS = {
     master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
@@ -416,9 +729,8 @@ function showApp() {
     document.getElementById('userBadge').textContent = currentUser.label;
 
     const importBtn = document.getElementById('importNavBtn');
-    if (importBtn) importBtn.style.display = currentUser.store === null ? 'inline-block' : 'none';
+    if (importBtn) importBtn.style.display = currentUser.store === null ? 'flex' : 'none';
 
-    // Lock store for non-master users in Add Stock
     if (currentUser.store) {
         document.getElementById('addStore').value = currentUser.store;
         document.getElementById('addStore').disabled = true;
@@ -511,7 +823,7 @@ async function addStock() {
     if (!itemName) return showAddResult('❌ Please enter item name!', 'error');
     if (!qty || parseFloat(qty) <= 0) return showAddResult('❌ Please enter a valid quantity!', 'error');
 
-    showAddResult('⏳ Submitting...', '');
+    showAddResult('<i class="fas fa-spinner fa-spin"></i> Submitting...', '');
 
     try {
         const res = await fetch(scriptURL, {
@@ -530,25 +842,24 @@ async function addStock() {
         const result = await res.json();
 
         if (result.status === 'success') {
-            showAddResult('✅ ' + result.message, 'success');
+            showAddResult('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
             document.getElementById('addItemName').value = '';
             document.getElementById('addQty').value = '';
             document.getElementById('addDcNo').value = '';
             loadStock();
             loadHistory();
         } else {
-            showAddResult('❌ ' + (result.message || 'Failed'), 'error');
+            showAddResult('<i class="fas fa-exclamation-circle"></i> ' + (result.message || 'Failed'), 'error');
         }
     } catch (e) {
-        showAddResult('❌ Error: ' + e.message, 'error');
+        showAddResult('<i class="fas fa-exclamation-circle"></i> Error: ' + e.message, 'error');
     }
 }
 
 function showAddResult(msg, type) {
     const div = document.getElementById('addResult');
-    div.textContent = msg;
-    div.className = type;
-    div.style.display = 'block';
+    div.innerHTML = msg;
+    div.className = type ? 'alert ' + type : '';
     if (type === 'success') setTimeout(() => { div.style.display = 'none'; }, 3000);
 }
 
@@ -556,12 +867,12 @@ function showAddResult(msg, type) {
 async function loadStock() {
     const div = document.getElementById('stockContent');
     if (!div) return;
-    div.innerHTML = '⏳ Loading stock data...';
+    div.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
     try {
         const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
         allStockData = await r.json();
         renderStock();
-    } catch (e) { div.innerHTML = '❌ Error: ' + e.message; }
+    } catch (e) { div.innerHTML = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Error: ' + e.message + '</div>'; }
 }
 
 function renderStock() {
@@ -574,27 +885,51 @@ function renderStock() {
     else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
     if (search) rows = rows.filter(d => (d.itemName || '').toLowerCase().includes(search));
 
-    if (!rows.length) { div.innerHTML = '<p style="text-align:center;color:#999;padding:30px;">No records found</p>'; return; }
+    if (!rows.length) {
+        div.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;"><i class="fas fa-box-open fa-3x" style="margin-bottom:1rem;color:#ccc;"></i><p>No records found</p></div>';
+        return;
+    }
 
-    let html = '<table><thead><tr><th>Store</th><th>Item Name</th><th style="text-align:right;">Balance</th></tr></thead><tbody>';
+    let html = `
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Store</th>
+                        <th>Item Name</th>
+                        <th style="text-align:right;">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
     rows.forEach(d => {
         const bal = parseFloat(d.qty) || 0;
-        const color = bal < 0 ? 'red' : bal === 0 ? 'orange' : 'green';
-        html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td style="text-align:right;color:${color};font-weight:bold;">${bal}</td></tr>`;
+        const color = bal < 0 ? 'var(--danger)' : bal === 0 ? 'var(--warning)' : 'var(--success)';
+        html += `
+            <tr>
+                <td>${d.store}</td>
+                <td>${d.itemName}</td>
+                <td style="text-align:right;color:${color};font-weight:bold;">
+                    ${bal}
+                </td>
+            </tr>
+        `;
     });
-    div.innerHTML = html + '</tbody></table>';
+
+    div.innerHTML = html + '</tbody></table></div>';
 }
 
 // ===================== LOAD HISTORY =====================
 async function loadHistory() {
     const div = document.getElementById('historyContent');
     if (!div) return;
-    div.innerHTML = '⏳ Loading history...';
+    div.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
     try {
         const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
         allHistoryData = await r.json();
         renderHistory();
-    } catch (e) { div.innerHTML = '❌ Error: ' + e.message; }
+    } catch (e) { div.innerHTML = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Error: ' + e.message + '</div>'; }
 }
 
 function renderHistory() {
@@ -607,26 +942,54 @@ function renderHistory() {
     else if (storeFilter) rows = rows.filter(d => d.store === storeFilter);
     if (search) rows = rows.filter(d => (d.itemName || '').toLowerCase().includes(search));
 
-    if (!rows.length) { div.innerHTML = '<p style="text-align:center;color:#999;padding:30px;">No records found</p>'; return; }
+    if (!rows.length) {
+        div.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;"><i class="fas fa-history fa-3x" style="margin-bottom:1rem;color:#ccc;"></i><p>No records found</p></div>';
+        return;
+    }
 
-    let html = '<table><thead><tr><th>Date</th><th>Store</th><th>Item</th><th>Qty</th><th>Type</th><th>DC No</th></tr></thead><tbody>';
+    let html = `
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Store</th>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Type</th>
+                        <th>DC No</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
     rows.forEach(d => {
-        const typeStyle = d.type === 'IN' ? 'color:green;font-weight:bold;' : 'color:red;font-weight:bold;';
-        html += `<tr><td>${d.date || ''}</td><td>${d.store || ''}</td><td>${d.itemName || ''}</td><td>${d.qty || ''}</td><td style="${typeStyle}">${d.type || ''}</td><td>${d.dcNo || ''}</td></tr>`;
+        const typeStyle = d.type === 'IN' ? 'color:var(--success);font-weight:bold;' : 'color:var(--danger);font-weight:bold;';
+        html += `
+            <tr>
+                <td>${d.date || '-'}</td>
+                <td>${d.store || '-'}</td>
+                <td>${d.itemName || '-'}</td>
+                <td>${d.qty || '-'}</td>
+                <td style="${typeStyle}">${d.type || '-'}</td>
+                <td>${d.dcNo || '-'}</td>
+            </tr>
+        `;
     });
-    div.innerHTML = html + '</tbody></table>';
+
+    div.innerHTML = html + '</tbody></table></div>';
 }
 
 // ===================== LOAD MOVEMENT =====================
 async function loadMovement() {
     const div = document.getElementById('movementContent');
     if (!div) return;
-    div.innerHTML = '⏳ Loading movement...';
+    div.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
     try {
         const r = await fetch(scriptURL + '?action=getHistory&ts=' + Date.now());
         allHistoryData = await r.json();
         renderMovement();
-    } catch (e) { div.innerHTML = '❌ Error: ' + e.message; }
+    } catch (e) { div.innerHTML = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Error: ' + e.message + '</div>'; }
 }
 
 function renderMovement() {
@@ -657,15 +1020,41 @@ function renderMovement() {
     });
 
     const result = Object.values(groups);
-    if (!result.length) { div.innerHTML = '<p style="text-align:center;color:#999;padding:30px;">No movement data found</p>'; return; }
+    if (!result.length) {
+        div.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;"><i class="fas fa-chart-line fa-3x" style="margin-bottom:1rem;color:#ccc;"></i><p>No movement data found</p></div>';
+        return;
+    }
 
-    let html = '<table><thead><tr><th>Store</th><th>Item</th><th style="color:green;">IN</th><th style="color:red;">OUT</th><th>Net</th></tr></thead><tbody>';
+    let html = `
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Store</th>
+                        <th>Item</th>
+                        <th style="color:var(--success);">IN</th>
+                        <th style="color:var(--danger);">OUT</th>
+                        <th>Net</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
     result.forEach(d => {
         const net = d.inQty - d.outQty;
-        const netStyle = net >= 0 ? 'color:green;font-weight:bold;' : 'color:red;font-weight:bold;';
-        html += `<tr><td>${d.store}</td><td>${d.itemName}</td><td style="color:green;">+${d.inQty}</td><td style="color:red;">-${d.outQty}</td><td style="${netStyle}">${net >= 0 ? '+' : ''}${net}</td></tr>`;
+        const netStyle = net >= 0 ? 'color:var(--success);font-weight:bold;' : 'color:var(--danger);font-weight:bold;';
+        html += `
+            <tr>
+                <td>${d.store}</td>
+                <td>${d.itemName}</td>
+                <td style="color:var(--success);">+${d.inQty}</td>
+                <td style="color:var(--danger);">-${d.outQty}</td>
+                <td style="${netStyle}">${net >= 0 ? '+' : ''}${net}</td>
+            </tr>
+        `;
     });
-    div.innerHTML = html + '</tbody></table>';
+
+    div.innerHTML = html + '</tbody></table></div>';
 }
 
 // ===================== IMPORT FROM FILE =====================
@@ -678,7 +1067,7 @@ async function importFromFile() {
     if (!store) return alert('⚠️ Select a store first');
 
     const btn = document.getElementById('uploadBtn');
-    btn.textContent = '⏳ Processing...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     btn.disabled = true;
 
     try {
@@ -686,7 +1075,7 @@ async function importFromFile() {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        
+
         const items = [];
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
@@ -703,13 +1092,13 @@ async function importFromFile() {
         const res = await fetch(scriptURL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 action: 'importOpening',
                 store: store,
-                items: items 
+                items: items
             })
         });
-        
+
         const result = await res.json();
         if (result.status === 'success') {
             alert(`✅ ${result.message}`);
@@ -720,7 +1109,7 @@ async function importFromFile() {
     } catch (e) {
         alert('❌ ' + e.message);
     } finally {
-        btn.textContent = '📤 UPLOAD & IMPORT';
+        btn.innerHTML = '<i class="fas fa-upload"></i> UPLOAD & IMPORT';
         btn.disabled = false;
     }
 }
@@ -729,15 +1118,15 @@ async function importFromFile() {
 async function processImport() {
     const txt = document.getElementById('importData').value.trim();
     if (!txt) return alert('Paste data first');
-    
+
     const store = document.getElementById('importStore').value;
     if (!store) return alert('Select a store first');
 
     const items = txt.split('\n').map(line => {
         const p = line.split('\t');
-        return { 
-            itemName: (p[0] || '').trim(), 
-            qty: parseFloat(p[1]) || 0 
+        return {
+            itemName: (p[0] || '').trim(),
+            qty: parseFloat(p[1]) || 0
         };
     }).filter(i => i.itemName);
 
@@ -747,10 +1136,10 @@ async function processImport() {
         const res = await fetch(scriptURL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 action: 'importOpening',
                 store: store,
-                items: items 
+                items: items
             })
         });
         const result = await res.json();
@@ -760,8 +1149,8 @@ async function processImport() {
         } else {
             throw new Error(result.message || 'Import failed');
         }
-    } catch (e) { 
-        alert('❌ Error: ' + e.message); 
+    } catch (e) {
+        alert('❌ Error: ' + e.message);
     }
 }
 
