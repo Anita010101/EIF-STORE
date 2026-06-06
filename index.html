@@ -64,6 +64,8 @@
         .footer-dev { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 4px; }
         .footer-dev strong { color: #f0c040; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 </head>
 <body>
 
@@ -156,7 +158,7 @@
             <div class="import-section">
                 <h3>📁 Upload Excel / CSV File</h3>
                 <input type="file" id="excelFile" class="import-file-input" accept=".xlsx,.xls,.csv">
-                <button class="btn-success" id="uploadBtn" onclick="importFromFile()">📤 UPLOAD & IMPORT FILE</button>
+                <button class="btn-success" id="uploadBtn" onclick="()">📤 UPLOAD & IMPORT FILE</button>
             </div>
             
             <div class="divider"><hr><span>OR</span><hr></div>
@@ -340,29 +342,69 @@ async function importFromFile() {
     btn.disabled = false;
 }
 
-async function processImport() {
-    const txt = document.getElementById('importData').value;
-    const store = document.getElementById('importStore').value;
-    const items = parseData(txt, store, false);
-    if (items.length === 0) return alert('No data');
-    await fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'importOpening', items: items }) });
-    alert('Imported ' + items.length + ' items');
-    document.getElementById('importData').value = '';
-}
+async function importFromFile() {
+    const fileInput = document.getElementById('excelFile');
+    const file = fileInput.files[0];
+    if (!file) return alert('Please select a file');
 
-function parseData(text, store, skipFirst) {
-    const lines = text.split('\n');
-    const items = [];
-    lines.forEach((line, i) => {
-        if (!line.trim() || (skipFirst && i === 0)) return;
-        const parts = line.split(/,|\t|  +/);
-        if (parts.length >= 2) {
-            const name = parts[0].trim().replace(/"/g, '');
-            const qty = parts[parts.length - 1].trim().replace(/"/g, '').replace(/[^0-9.-]/g, '');
-            if (name && !isNaN(qty)) items.push({ store: store, itemName: name, qty: parseFloat(qty) });
+    const btn = document.getElementById('uploadBtn');
+    btn.textContent = '⏳ Reading...';
+    btn.disabled = true;
+
+    try {
+        // Read Excel file as binary
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        // Get first sheet
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+        // Skip header row and parse data
+        const items = [];
+        for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row[0] || !row[1]) continue; // Skip empty rows
+
+            const itemName = row[0].toString().trim();
+            const qty = parseFloat(row[1]);
+
+            if (itemName && !isNaN(qty)) {
+                items.push({
+                    store: document.getElementById('importStore').value,
+                    itemName: itemName,
+                    qty: qty
+                });
+            }
         }
-    });
-    return items;
+
+        if (items.length === 0) {
+            alert('No valid data found');
+            btn.textContent = '📤 UPLOAD & IMPORT FILE';
+            btn.disabled = false;
+            return;
+        }
+
+        // Send to Google Sheets
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'importOpening', items: items })
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            alert(`✅ Imported ${items.length} items!`);
+            document.getElementById('excelFile').value = '';
+        } else {
+            alert(`❌ Error: ${result.message || 'Failed to import'}`);
+        }
+    } catch (error) {
+        alert(`❌ Error: ${error.message}`);
+    } finally {
+        btn.textContent = '📤 UPLOAD & IMPORT FILE';
+        btn.disabled = false;
+    }
 }
 
 function exportCSV(tab) { /* same as before */ }
