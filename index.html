@@ -904,9 +904,17 @@ if (_saved) {
 }
     // Load all items for autocomplete in Add Stock tab
 function loadItemAutocomplete() {
-  google.script.run.withSuccessHandler(function(items) {
-    const datalist = document.getElementById("itemSuggestions");
-    datalist.innerHTML = ''; // Clear old items
+  google.script.run
+    .withSuccessHandler(function(items) {
+      allItems = items || [];
+      console.log('Items loaded: ' + allItems.length); // Check browser console
+    })
+    .withFailureHandler(function(err) {
+      console.log('Error: ' + err.message);
+    })
+    .getItemNames(); // ← Must match exactly your Apps Script function name
+}
+
     
     items.forEach(item => {
       const option = document.createElement("option");
