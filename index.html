@@ -450,7 +450,7 @@
 
 <script>
 // ===================== CONFIG =====================
-const scriptURL = 'https://script.google.com/macros/s/AKfycby5CmAryV083MXbsc4JDrVvnAKJsJhVXfXDfW2WqAaTeyu0M0OmpuVSh6_wa29vYkDILg/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzqvt1Q_d6JiBaxTMBgrROBrqdFTN3Gcf6s_8EsiT-__T94AmCkOi7AG0gCTGEe6bIjXQ/exec';
 
 const USERS = {
     master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
@@ -978,30 +978,49 @@ function loadItemAutocomplete() {
 
 // Show all items when input is clicked
 function showAllItems() {
+  if (allItems.length === 0) {
+    console.warn('No items to show!');
+    return;
+  }
   renderDropdown(allItems);
 }
 
-// Filter items as user types
 function filterItems() {
   const input = document.getElementById('itemNameInput').value.toLowerCase().trim();
   if (input === '') {
-    renderDropdown(allItems);
+    showAllItems();
   } else {
     const filtered = allItems.filter(item => item.toLowerCase().includes(input));
     renderDropdown(filtered);
   }
 }
 
-// Render dropdown list
 function renderDropdown(items) {
   const dropdown = document.getElementById('itemDropdown');
   dropdown.innerHTML = '';
 
   if (items.length === 0) {
-    dropdown.innerHTML = '<div style="padding:10px; color:#999; font-size:14px;">No items found</div>';
+    dropdown.innerHTML = '<div style="padding:10px; color:#999;">No items found</div>';
     dropdown.style.display = 'block';
     return;
   }
+
+  items.forEach(function(item) {
+    const div = document.createElement('div');
+    div.textContent = item;
+    div.style.cssText = 'padding:11px 15px; cursor:pointer; border-bottom:1px solid #f0f0f0; font-size:14px;';
+    div.onmouseover = function() { this.style.background = '#f3e5f5'; };
+    div.onmouseout = function() { this.style.background = 'white'; };
+    div.onclick = function() {
+      document.getElementById('itemNameInput').value = item;
+      dropdown.style.display = 'none';
+    };
+    dropdown.appendChild(div);
+  });
+
+  dropdown.style.display = 'block';
+}
+
 
   items.forEach(function(item) {
     const div = document.createElement('div');
