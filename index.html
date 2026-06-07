@@ -862,11 +862,17 @@ async function processImport() {
 
 // ===================== DROPDOWN AUTOCOMPLETE =====================
 function loadItemAutocomplete() {
-  if (typeof google === 'undefined') {
-    // Retry slightly later if google API is still loading
-    setTimeout(loadItemAutocomplete, 500); 
-    return;
-  }
+    fetch(scriptURL + '?action=getItemNames&ts=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(items) {
+            allItems = items || [];
+            console.log('✅ Items loaded: ' + allItems.length);
+        })
+        .catch(function(e) {
+            console.log('❌ Error loading items: ' + e.message);
+        });
+}
+
   google.script.run
     .withSuccessHandler(function(items) {
       allItems = items || [];
