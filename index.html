@@ -338,13 +338,24 @@
             </div>
 
             <div class="form-group">
-                <label>📝 Item Name *</label>
-                <input type="text" id="itemName" placeholder="Search & Select Item Name" required list="itemList" autocomplete="off">
-<datalist id="itemList">
-  <!-- Items will load here -->
-</datalist>
+               <!-- Item Name Field -->
+<div style="position: relative; width: 100%;">
+  <label style="font-weight:bold;">🏷️ Item Name *</label>
+  <input 
+    type="text" 
+    id="itemNameInput" 
+    placeholder="Search & Select Item Name"
+    oninput="filterItems()" 
+    onclick="showAllItems()"
+    autocomplete="off"
+    style="width:100%; padding:12px; font-size:15px; border:1px solid #ccc; border-radius:6px; margin-top:5px; box-sizing:border-box;">
+  
+  <!-- Dropdown List -->
+  <div id="itemDropdown" 
+       style="display:none; position:absolute; z-index:9999; background:white; border:1px solid #ccc; border-radius:0 0 6px 6px; width:100%; max-height:220px; overflow-y:auto; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+  </div>
+</div>
 
-                <datalist id="itemSuggestions"></datalist>
             </div>
 
             <div class="form-row">
@@ -439,7 +450,7 @@
 
 <script>
 // ===================== CONFIG =====================
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxuR9ZJEyvyt6QHCbPYf2sqCMSNSYQeSr1AgLu4jn06XfRC0DP854r_-SaC46D0UYbzzw/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbx9OzsZ0NSPJFKS1yOxCzVBtvdDdHdVO3MaBweUVozdKvypVrsVy6KI9s_FFuxHsNT_-w/exec';
 
 const USERS = {
     master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
@@ -938,51 +949,82 @@ function getAllItems() {
   return items;
 }
     // Load all items for autocomplete in Add Stock tab
+let allItems = [];
+
+// Load items from Opening Stock sheets
 function loadItemAutocomplete() {
-  google.script.run.withSuccessHandler(function(items) {
-    const datalist = document.getElementById("itemSuggestions");
-    datalist.innerHTML = ''; // Clear old items
-    
-    items.forEach(item => {
-      const option = document.createElement("option");
-      option.value = item;
-      datalist.appendChild(option);
-    });
-  }).getAllItems();
+  if (typeof google === 'undefined') {
+    setTimeout(loadItemAutocomplete, 500); // Retry after 500ms if google not ready
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(function(items) {
+      allItems = items || [];
+      console.log('Items loaded: ' + allItems.length);
+    })
+    .withFailureHandler(function(err) {
+      console.log('Failed to load items: ' + err.message);
+    })
+    .getItemNames();
 }
 
-// Call when page loads
-document.addEventListener("DOMContentLoaded", function() {
+// Show all items when input is clicked
+function showAllItems() {
+  renderDropdown(allItems);
+}
+
+// Filter items as user types
+function filterItems() {
+  const input = document.getElementById('itemNameInput').value.toLowerCase().trim();
+  if (input === '') {
+    renderDropdown(allItems);
+  } else {
+    const filtered = allItems.filter(item => item.toLowerCase().includes(input));
+    renderDropdown(filtered);
+  }
+}
+
+// Render dropdown list
+function renderDropdown(items) {
+  const dropdown = document.getElementById('itemDropdown');
+  dropdown.innerHTML = '';
+
+  if (items.length === 0) {
+    dropdown.innerHTML = '<div style="padding:10px; color:#999; font-size:14px;">No items found</div>';
+    dropdown.style.display = 'block';
+    return;
+  }
+
+  items.forEach(function(item) {
+    const div = document.createElement('div');
+    div.textContent = item;
+    div.style.cssText = 'padding:11px 15px; cursor:pointer; border-bottom:1px solid #f0f0f0; font-size:14px;';
+    div.onmouseover = function() { this.style.background = '#f3e5f5'; };
+    div.onmouseout  = function() { this.style.background = 'white'; };
+    div.onclick = function() {
+      document.getElementById('itemNameInput').value = item;
+      dropdown.style.display = 'none';
+    };
+    dropdown.appendChild(div);
+  });
+
+  dropdown.style.display = 'block';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('itemDropdown');
+  const input    = document.getElementById('itemNameInput');
+  if (e.target !== input) {
+    if (dropdown) dropdown.style.display = 'none';
+  }
+});
+
+// Call on page load
+window.addEventListener('load', function() {
   loadItemAutocomplete();
 });
 
-function getAllItems() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetNames = ["Opening Stock Store1", "Opening Stock Store2", "Opening Stock Store3"];
-  
-  let items = [];
-  
-  for (let s = 0; s < sheetNames.length; s++) {
-    const sheet = ss.getSheetByName(sheetNames[s]);
-    
-    if (!sheet) continue;
-    
-    const data = sheet.getRange("A:C").getValues();
-    
-    for (let i = 1; i < data.length; i++) {
-      const itemName = data[i][1]; // Column B
-      
-      if (itemName && itemName.trim() !== "") {
-        if (!items.includes(itemName)) {
-          items.push(itemName);
-        }
-      }
-    }
-  }
-  
-  items.sort();
-  return items;
-}
 
 
 </script>
