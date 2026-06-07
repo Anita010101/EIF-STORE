@@ -548,6 +548,27 @@ function populateMonthYear() {
     }
 }
 
+    // Load all items from Opening Stock sheet
+function loadItemDropdown() {
+  google.script.run.withSuccessHandler(function(items) {
+    const dropdown = document.getElementById("itemName");
+    dropdown.innerHTML = '<option value="">-- Select Item --</option>';
+    
+    items.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item;
+      option.textContent = item;
+      dropdown.appendChild(option);
+    });
+  }).getAllItems();
+}
+
+// Call this function when page loads
+document.addEventListener("DOMContentLoaded", function() {
+  loadItemDropdown();
+  // ... your other code ...
+});
+
 // ===================== SHOW TAB =====================
 function showTab(tab, btn) {
     if (tab === 'import' && currentUser && currentUser.store !== null) return alert('⛔ Access Denied');
