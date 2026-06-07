@@ -339,11 +339,7 @@
 
             <div class="form-group">
                 <label>📝 Item Name *</label>
-                <select id="itemName" required style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 100%;">
-  <option value="">-- Select Item --</option>
-  <!-- Items will load here automatically -->
-</select>
-
+                <input type="text" id="addItemName" placeholder="Enter item name" list="itemSuggestions">
                 <datalist id="itemSuggestions"></datalist>
             </div>
 
@@ -438,28 +434,6 @@
 </div>
 
 <script>
-
-    // Load all items from Opening Stock sheet
-function loadItemDropdown() {
-  google.script.run.withSuccessHandler(function(items) {
-    const dropdown = document.getElementById("itemName");
-    dropdown.innerHTML = '<option value="">-- Select Item --</option>';
-    
-    items.forEach(item => {
-      const option = document.createElement("option");
-      option.value = item;
-      option.textContent = item;
-      dropdown.appendChild(option);
-    });
-  }).getAllItems();
-}
-
-// Call this function when page loads
-document.addEventListener("DOMContentLoaded", function() {
-  loadItemDropdown();
-  // ... your other code ...
-});
-
 // ===================== CONFIG =====================
 const scriptURL = 'https://script.google.com/macros/s/AKfycbwU1K6fc6jnYd0pC2i2wymMDdJz96Zrpa93ZNXaiL159VWRE54nFVK8PsBdLVTWyi83gw/exec';
 
@@ -880,6 +854,53 @@ if (_saved) {
         }
     } catch (e) { localStorage.removeItem('eifUser'); }
 }
+    // Load all items for autocomplete in Add Stock tab
+function loadItemAutocomplete() {
+  google.script.run.withSuccessHandler(function(items) {
+    const datalist = document.getElementById("itemSuggestions");
+    datalist.innerHTML = ''; // Clear old items
+    
+    items.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item;
+      datalist.appendChild(option);
+    });
+  }).getAllItems();
+}
+
+// Call when page loads
+document.addEventListener("DOMContentLoaded", function() {
+  loadItemAutocomplete();
+});
+
+function getAllItems() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ["Opening Stock Store1", "Opening Stock Store2", "Opening Stock Store3"];
+  
+  let items = [];
+  
+  for (let s = 0; s < sheetNames.length; s++) {
+    const sheet = ss.getSheetByName(sheetNames[s]);
+    
+    if (!sheet) continue;
+    
+    const data = sheet.getRange("A:C").getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      const itemName = data[i][1]; // Column B
+      
+      if (itemName && itemName.trim() !== "") {
+        if (!items.includes(itemName)) {
+          items.push(itemName);
+        }
+      }
+    }
+  }
+  
+  items.sort();
+  return items;
+}
+
 </script>
 </body>
 </html>
