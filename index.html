@@ -339,7 +339,11 @@
 
             <div class="form-group">
                 <label>📝 Item Name *</label>
-                <input type="text" id="addItemName" placeholder="Enter item name" list="itemSuggestions">
+                <select id="itemName" required style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 100%;">
+  <option value="">-- Select Item --</option>
+  <!-- Items will load here automatically -->
+</select>
+
                 <datalist id="itemSuggestions"></datalist>
             </div>
 
@@ -434,6 +438,28 @@
 </div>
 
 <script>
+
+    // Load all items from Opening Stock sheet
+function loadItemDropdown() {
+  google.script.run.withSuccessHandler(function(items) {
+    const dropdown = document.getElementById("itemName");
+    dropdown.innerHTML = '<option value="">-- Select Item --</option>';
+    
+    items.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item;
+      option.textContent = item;
+      dropdown.appendChild(option);
+    });
+  }).getAllItems();
+}
+
+// Call this function when page loads
+document.addEventListener("DOMContentLoaded", function() {
+  loadItemDropdown();
+  // ... your other code ...
+});
+
 // ===================== CONFIG =====================
 const scriptURL = 'https://script.google.com/macros/s/AKfycbw_OBrorqhITwsW_NZqJB3apLsUKyg3h8Sg9i7cDrHvfzdo4g7SodU15T7BmRsS6dQMPw/exec';
 
