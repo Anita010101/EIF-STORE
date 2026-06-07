@@ -289,8 +289,6 @@
         <button class="nav-btn" onclick="showTab('history', this)">📜 History</button>
         <button class="nav-btn" onclick="showTab('movement', this)">📈 Movement</button>
         <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)" style="display:none;">📥 Import</button>
-        <button class="tab-btn admin-only" onclick="showTab('tracking')">Shipment Tracking</button>
-
     </div>
 
     <div class="container">
@@ -423,33 +421,6 @@
                 <button class="btn-success" id="uploadBtn" onclick="importFromFile()" style="width:100%;">📤 UPLOAD & IMPORT</button>
             </div>
 
-            <div class="card tab-content admin-only" id="tab-tracking" style="display:none;">
-                
-   <!-- Shipment Tracking Tab -->
-<div class="card tab-content admin-only" id="tab-tracking" style="display:none;">
-    <h2 style="color: #4a148c; border-bottom: 2px solid #e1bee7; padding-bottom: 10px;">🚢 Shipment Tracking</h2>
-    
-    <div id="trackingResult" style="margin-top: 15px;"></div>
-
-    <div class="form-row" style="display: flex; gap: 10px; margin-top: 20px;">
-        <div class="form-group" style="flex: 1;">
-            <label style="font-weight: bold;">Container No. *</label>
-            <input type="text" id="containerNo" placeholder="e.g. MSKU1234567" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-        </div>
-
-        <div class="form-group" style="flex: 1;">
-            <label style="font-weight: bold;">BL No. (Bill of Lading) *</label>
-            <input type="text" id="blNo" placeholder="Enter BL Number" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-        </div>
-    </div>
-
-    <button class="btn-success" onclick="trackShipment()" style="width:100%; padding:15px; font-size:16px; font-weight:bold; margin-top:15px; background: #4a148c; color: white; border: none; border-radius: 8px; cursor: pointer;">
-        🔍 SEARCH SHIPMENT
-    </button>
-</div>
-
-
-
             <div class="divider"><hr><span>OR</span><hr></div>
 
             <div class="import-section">
@@ -464,7 +435,7 @@
 
 <script>
 // ===================== CONFIG =====================
-const scriptURL = 'https://script.google.com/macros/s/AKfycbzcfBqciqzqTLTPg7w6YYMVj9QCsF8vgpMbeBglAJGiJtgxYgVFK9v5HNzc3sPHnsrjjg/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbznWuqCLFJhqru5Hokqxnj_N2gH_3-JEoJA0mdL0CAeQEWz3qkJViTCt65jj0TheKSCBw/exec';
 
 const USERS = {
     master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
@@ -604,36 +575,16 @@ async function loadItemSuggestions() {
 
 // ===================== ADD STOCK =====================
 async function addStock() {
-  const store = document.getElementById("addStore").value;
-  const type = document.getElementById("addType").value;
-  const itemName = document.getElementById("addItemName").value.trim();
-  const qty = document.getElementById("addQty").value;
-  const dcNo = document.getElementById("addDcNo").value;
+    const store = document.getElementById('addStore').value;
+    const type = document.getElementById('addType').value;
+    const itemName = document.getElementById('addItemName').value.trim();
+    const qty = document.getElementById('addQty').value.trim();
+    const dcNo = document.getElementById('addDcNo').value.trim();
 
-  const datalist = document.getElementById("itemSuggestions");
-  let validItem = false;
-
-  for (let i = 0; i < datalist.options.length; i++) {
-    if (datalist.options[i].value === itemName) {
-      validItem = true;
-      break;
-    }
-  }
-
-  if (!validItem) {
-    document.getElementById("addResult").innerHTML =
-      '<p style="color:red;">❌ Please select an item from the list only.</p>';
-    return;
-  }
-
-  if (!store || !type || !itemName || !qty) {
-    document.getElementById("addResult").innerHTML =
-      '<p style="color:red;">❌ Please fill all required fields.</p>';
-    return;
-  }
-
-  // keep your original submit code here
-
+    if (!store) return showAddResult('❌ Please select a store!', 'error');
+    if (!type) return showAddResult('❌ Please select IN or OUT!', 'error');
+    if (!itemName) return showAddResult('❌ Please enter item name!', 'error');
+    if (!qty || parseFloat(qty) <= 0) return showAddResult('❌ Please enter a valid quantity!', 'error');
 
     showAddResult('⏳ Submitting...', '');
 
@@ -888,9 +839,6 @@ async function processImport() {
         alert('❌ Error: ' + e.message); 
     }
 }
- 
-
-
 
 // ===================== AUTO LOGIN =====================
 const _saved = localStorage.getItem('eifUser');
@@ -952,42 +900,7 @@ function getAllItems() {
   items.sort();
   return items;
 }
-    function trackShipment() {
-  const container = document.getElementById("containerNo").value.trim();
-  const bl = document.getElementById("blNo").value.trim();
-  const resultDiv = document.getElementById("trackingResult");
-
-  if (!container && !bl) {
-    resultDiv.innerHTML = '<p style="color:red; background:#ffebee; padding:10px; border-radius:5px;">⚠️ Please enter at least a Container No. or BL No.</p>';
-    return;
-  }
-
-  resultDiv.innerHTML = '<p style="color:#2575fc; font-weight:bold;">⏳ Fetching shipment data from API...</p>';
-
-  google.script.run
-    .withSuccessHandler(function(result) {
-      if (result.success) {
-        resultDiv.innerHTML = `
-          <div style="background: #f3e5f5; border-left: 5px solid #4a148c; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="margin-top:0; color:#4a148c;">📦 Shipment Found</h3>
-            <p><strong>Status:</strong> <span style="color:green;">${result.status}</span></p>
-            <p><strong>Current Location:</strong> ${result.location}</p>
-            <p><strong>Vessel Name:</strong> ${result.vessel}</p>
-            <p><strong>ETA (Estimated Arrival):</strong> ${result.eta}</p>
-            <p><strong>Last Update:</strong> ${result.lastUpdate}</p>
-          </div>
-        `;
-      } else {
-        resultDiv.innerHTML = `<p style="color:red; background:#ffebee; padding:10px; border-radius:5px;">❌ ${result.message}</p>`;
-      }
-    })
-    .withFailureHandler(function(err) {
-      resultDiv.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
-    })
-    .trackShipment(container, bl);
-}
 
 </script>
-   
 </body>
 </html>
