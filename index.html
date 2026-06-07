@@ -289,6 +289,8 @@
         <button class="nav-btn" onclick="showTab('history', this)">📜 History</button>
         <button class="nav-btn" onclick="showTab('movement', this)">📈 Movement</button>
         <button class="nav-btn" id="importNavBtn" onclick="showTab('import', this)" style="display:none;">📥 Import</button>
+        <button class="tab-btn admin-only" onclick="showTab('tracking')">Shipment Tracking</button>
+
     </div>
 
     <div class="container">
@@ -421,6 +423,34 @@
                 <button class="btn-success" id="uploadBtn" onclick="importFromFile()" style="width:100%;">📤 UPLOAD & IMPORT</button>
             </div>
 
+            <div class="card tab-content admin-only" id="tab-tracking" style="display:none;">
+    <h2>🚚 Shipment Tracking</h2>
+    <div id="trackingResult"></div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Courier *</label>
+            <select id="trackingCourier">
+                <option value="">Select Courier</option>
+                <option value="dhl">DHL</option>
+                <option value="fedex">FedEx</option>
+                <option value="ups">UPS</option>
+                <option value="aramex">Aramex</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Tracking Number *</label>
+            <input type="text" id="trackingNumber" placeholder="Enter tracking number">
+        </div>
+    </div>
+
+    <button class="btn-success" onclick="trackShipment()" style="width:100%;padding:12px;font-size:16px;margin-top:8px;">
+        🔍 TRACK SHIPMENT
+    </button>
+</div>
+
+
             <div class="divider"><hr><span>OR</span><hr></div>
 
             <div class="import-section">
@@ -435,7 +465,7 @@
 
 <script>
 // ===================== CONFIG =====================
-const scriptURL = 'https://script.google.com/macros/s/AKfycbwU1K6fc6jnYd0pC2i2wymMDdJz96Zrpa93ZNXaiL159VWRE54nFVK8PsBdLVTWyi83gw/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbxRCTnpmUWXgy0QHcriUSEzmN6EYqy0LI5lYGa-C3O0_-5AZcYr6TVAPjbiQVfQ_OxQKg/exec';
 
 const USERS = {
     master: { password: 'EIF2026',  store: null,      label: '👑 Master Admin' },
@@ -859,6 +889,44 @@ async function processImport() {
         alert('❌ Error: ' + e.message); 
     }
 }
+// New function for Shipment Tracking
+function trackShipment() {
+  const courier = document.getElementById("trackingCourier").value;
+  const trackingNumber = document.getElementById("trackingNumber").value.trim();
+
+  if (!courier || !trackingNumber) {
+    document.getElementById("trackingResult").innerHTML =
+      '<p style="color:red;">❌ Please select courier and enter tracking number.</p>';
+    return;
+  }
+
+  document.getElementById("trackingResult").innerHTML =
+    '<p style="color:blue;">🔍 Checking shipment status...</p>';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        document.getElementById("trackingResult").innerHTML = `
+          <div class="guide-box">
+            <p><strong>Status:</strong> ${result.status || 'N/A'}</p>
+            <p><strong>Location:</strong> ${result.location || 'N/A'}</p>
+            <p><strong>Last Update:</strong> ${result.lastUpdate || 'N/A'}</p>
+            <p><strong>Courier:</strong> ${result.courier || 'N/A'}</p>
+            <p><strong>Tracking No:</strong> ${result.trackingNumber || 'N/A'}</p>
+          </div>
+        `;
+      } else {
+        document.getElementById("trackingResult").innerHTML =
+          `<p style="color:red;">❌ ${result.message}</p>`;
+      }
+    })
+    .withFailureHandler(function(error) {
+      document.getElementById("trackingResult").innerHTML =
+        `<p style="color:red;">❌ Error: ${error.message}</p>`;
+    })
+    .trackShipment(courier, trackingNumber);
+}
+
 
 // ===================== AUTO LOGIN =====================
 const _saved = localStorage.getItem('eifUser');
