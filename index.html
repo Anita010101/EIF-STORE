@@ -888,31 +888,7 @@ async function processImport() {
         alert('❌ Error: ' + e.message); 
     }
 }
- //---shipment tracking---//
-<div class="card tab-content admin-only" id="tab-tracking" style="display:none; padding:20px;">
-    <h2 style="color:#4a148c; margin-bottom:20px;">🚢 Shipment Tracking</h2>
-    
-    <div id="trackingResult" style="margin-bottom:15px;"></div>
-
-    <div style="display:flex; gap:15px; flex-wrap:wrap;">
-        <div style="flex:1; min-width:250px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold;">Container No. *</label>
-            <input type="text" id="containerNo" placeholder="Enter Container Number" 
-                   style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px;">
-        </div>
-
-        <div style="flex:1; min-width:250px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold;">BL No. (Bill of Lading) *</label>
-            <input type="text" id="blNo" placeholder="Enter BL Number" 
-                   style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px;">
-        </div>
-    </div>
-
-    <button onclick="trackShipment()" 
-            style="width:100%; margin-top:20px; padding:14px; background:#4a148c; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
-        🔍 SEARCH SHIPMENT
-    </button>
-</div>
+ 
 
 
 
@@ -1010,6 +986,31 @@ function getAllItems() {
     })
     .trackShipment(container, bl);
 }
+<!-- Shipment Tracking Tab - Admin Only -->
+<div class="card tab-content admin-only" id="tab-tracking" style="display:none; padding:20px;">
+    <h2 style="color:#4a148c; margin-bottom:20px;">🚢 Shipment Tracking</h2>
+    
+    <div id="trackingResult" style="margin-bottom:15px;"></div>
+
+    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:250px;">
+            <label style="display:block; margin-bottom:5px; font-weight:bold;">Container No. *</label>
+            <input type="text" id="containerNo" placeholder="Enter Container Number" 
+                   style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px;">
+        </div>
+
+        <div style="flex:1; min-width:250px;">
+            <label style="display:block; margin-bottom:5px; font-weight:bold;">BL No. (Bill of Lading) *</label>
+            <input type="text" id="blNo" placeholder="Enter BL Number" 
+                   style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px;">
+        </div>
+    </div>
+
+    <button onclick="trackShipment()" 
+            style="width:100%; margin-top:20px; padding:14px; background:#4a148c; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
+        🔍 SEARCH SHIPMENT
+    </button>
+</div>
 
 </script>
 </body>
