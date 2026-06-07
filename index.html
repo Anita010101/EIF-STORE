@@ -888,43 +888,32 @@ async function processImport() {
         alert('❌ Error: ' + e.message); 
     }
 }
-// New function for Shipment Tracking
-function trackShipment() {
-  const courier = document.getElementById("trackingCourier").value;
-  const trackingNumber = document.getElementById("trackingNumber").value.trim();
+<!-- Shipment Tracking Tab - Admin Only -->
+<div class="card tab-content admin-only" id="tab-tracking" style="display:none; padding:20px;">
+    <h2 style="color:#4a148c; margin-bottom:20px;">🚢 Shipment Tracking</h2>
+    
+    <div id="trackingResult" style="margin-bottom:15px;"></div>
 
-  if (!courier || !trackingNumber) {
-    document.getElementById("trackingResult").innerHTML =
-      '<p style="color:red;">❌ Please select courier and enter tracking number.</p>';
-    return;
-  }
+    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:250px;">
+            <label style="display:block; margin-bottom:5px; font-weight:bold;">Container No. *</label>
+            <input type="text" id="containerNo" placeholder="Enter Container Number" 
+                   style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px;">
+        </div>
 
-  document.getElementById("trackingResult").innerHTML =
-    '<p style="color:blue;">🔍 Checking shipment status...</p>';
+        <div style="flex:1; min-width:250px;">
+            <label style="display:block; margin-bottom:5px; font-weight:bold;">BL No. (Bill of Lading) *</label>
+            <input type="text" id="blNo" placeholder="Enter BL Number" 
+                   style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px;">
+        </div>
+    </div>
 
-  google.script.run
-    .withSuccessHandler(function(result) {
-      if (result.success) {
-        document.getElementById("trackingResult").innerHTML = `
-          <div class="guide-box">
-            <p><strong>Status:</strong> ${result.status || 'N/A'}</p>
-            <p><strong>Location:</strong> ${result.location || 'N/A'}</p>
-            <p><strong>Last Update:</strong> ${result.lastUpdate || 'N/A'}</p>
-            <p><strong>Courier:</strong> ${result.courier || 'N/A'}</p>
-            <p><strong>Tracking No:</strong> ${result.trackingNumber || 'N/A'}</p>
-          </div>
-        `;
-      } else {
-        document.getElementById("trackingResult").innerHTML =
-          `<p style="color:red;">❌ ${result.message}</p>`;
-      }
-    })
-    .withFailureHandler(function(error) {
-      document.getElementById("trackingResult").innerHTML =
-        `<p style="color:red;">❌ Error: ${error.message}</p>`;
-    })
-    .trackShipment(courier, trackingNumber);
-}
+    <button onclick="trackShipment()" 
+            style="width:100%; margin-top:20px; padding:14px; background:#4a148c; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
+        🔍 SEARCH SHIPMENT
+    </button>
+</div>
+
 
 
 // ===================== AUTO LOGIN =====================
@@ -1021,32 +1010,6 @@ function getAllItems() {
     })
     .trackShipment(container, bl);
 }
-<!-- Shipment Tracking Tab - Admin Only -->
-<div class="card tab-content admin-only" id="tab-tracking" style="display:none; padding:20px;">
-    <h2 style="color:#4a148c; margin-bottom:20px;">🚢 Shipment Tracking</h2>
-    
-    <div id="trackingResult" style="margin-bottom:15px;"></div>
-
-    <div style="display:flex; gap:15px; flex-wrap:wrap;">
-        <div style="flex:1; min-width:250px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold;">Container No. *</label>
-            <input type="text" id="containerNo" placeholder="Enter Container Number" 
-                   style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px;">
-        </div>
-
-        <div style="flex:1; min-width:250px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold;">BL No. (Bill of Lading) *</label>
-            <input type="text" id="blNo" placeholder="Enter BL Number" 
-                   style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px;">
-        </div>
-    </div>
-
-    <button onclick="trackShipment()" 
-            style="width:100%; margin-top:20px; padding:14px; background:#4a148c; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
-        🔍 SEARCH SHIPMENT
-    </button>
-</div>
-
 
 </script>
 </body>
