@@ -462,6 +462,7 @@ const USERS = {
 let currentUser = null;
 let allStockData = [];
 let allHistoryData = [];
+let allItems = []; // For dropdown item storage
 
 // ===================== LOGIN =====================
 function login() {
@@ -488,7 +489,6 @@ function showApp() {
     const importBtn = document.getElementById('importNavBtn');
     if (importBtn) importBtn.style.display = currentUser.store === null ? 'inline-block' : 'none';
 
-    // Lock store for non-master users in Add Stock
     if (currentUser.store) {
         document.getElementById('addStore').value = currentUser.store;
         document.getElementById('addStore').disabled = true;
@@ -498,7 +498,8 @@ function showApp() {
     populateMonthYear();
     loadStock();
 }
-// Export to Excel
+
+// ===================== EXPORT TO EXCEL =====================
 function exportToExcel(type) {
     let data = [];
     let filename = '';
@@ -567,32 +568,18 @@ function showTab(tab, btn) {
     const el = document.getElementById('tab-' + tab);
     if (el) el.classList.add('active');
     if (btn) btn.classList.add('active');
+    
     if (tab === 'stock') loadStock();
     if (tab === 'history') loadHistory();
     if (tab === 'movement') loadMovement();
-    if (tab === 'add') loadItemSuggestions();
-}
-
-// ===================== ITEM SUGGESTIONS =====================
-async function loadItemSuggestions() {
-    try {
-        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
-        const data = await r.json();
-        let items = data;
-        if (currentUser.store) items = items.filter(d => d.store === currentUser.store);
-        const names = [...new Set(items.map(d => d.itemName))].sort();
-        const datalist = document.getElementById('itemSuggestions');
-        datalist.innerHTML = names.map(n => `<option value="${n}">`).join('');
-    } catch (e) {
-        console.log('Item suggestions error:', e);
-    }
+    // Dropdown items are now loaded once on page startup
 }
 
 // ===================== ADD STOCK =====================
 async function addStock() {
     const store = document.getElementById('addStore').value;
     const type = document.getElementById('addType').value;
-    const itemName = document.getElementById('addItemName').value.trim();
+    const itemName = document.getElementById('itemNameInput').value.trim(); // Fixed matching ID
     const qty = document.getElementById('addQty').value.trim();
     const dcNo = document.getElementById('addDcNo').value.trim();
 
@@ -600,38 +587,11 @@ async function addStock() {
     if (!type) return showAddResult('❌ Please select IN or OUT!', 'error');
     if (!itemName) return showAddResult('❌ Please enter item name!', 'error');
     if (!qty || parseFloat(qty) <= 0) return showAddResult('❌ Please enter a valid quantity!', 'error');
-    function addStock() {
-  const store = document.getElementById("addStore").value;
-  const type = document.getElementById("addType").value;
-  const itemName = document.getElementById("addItemName").value.trim();
-  const qty = document.getElementById("addQty").value;
-  const dcNo = document.getElementById("addDcNo").value;
-
-  const datalist = document.getElementById("itemSuggestions");
-  let validItem = false;
-
-  for (let i = 0; i < datalist.options.length; i++) {
-    if (datalist.options[i].value === itemName) {
-      validItem = true;
-      break;
+    
+    // Check if the typed item actually exists in the dropdown list
+    if (!allItems.includes(itemName)) {
+        return showAddResult('❌ Please select an item from the list only.', 'error');
     }
-  }
-
-  if (!validItem) {
-    document.getElementById("addResult").innerHTML =
-      '<p style="color:red;">❌ Please select an item from the list only.</p>';
-    return;
-  }
-
-  if (!store || !type || !itemName || !qty) {
-    document.getElementById("addResult").innerHTML =
-      '<p style="color:red;">❌ Please fill all required fields.</p>';
-    return;
-  }
-
-  // keep your original submit code here
-}
-
 
     showAddResult('⏳ Submitting...', '');
 
@@ -653,7 +613,7 @@ async function addStock() {
 
         if (result.status === 'success') {
             showAddResult('✅ ' + result.message, 'success');
-            document.getElementById('addItemName').value = '';
+            document.getElementById('itemNameInput').value = '';
             document.getElementById('addQty').value = '';
             document.getElementById('addDcNo').value = '';
             loadStock();
@@ -666,7 +626,6 @@ async function addStock() {
     }
 }
     
-
 function showAddResult(msg, type) {
     const div = document.getElementById('addResult');
     div.textContent = msg;
@@ -888,81 +847,11 @@ async function processImport() {
     }
 }
 
-// ===================== AUTO LOGIN =====================
-const _saved = localStorage.getItem('eifUser');
-if (_saved) {
-    try {
-        const d = JSON.parse(_saved);
-        for (let k in USERS) {
-            if (USERS[k].store === d.store) {
-                currentUser = USERS[k];
-                showApp();
-                break;
-            }
-        }
-    } catch (e) { localStorage.removeItem('eifUser'); }
-}
-    // Load all items for autocomplete in Add Stock tab
-function loadItemAutocomplete() {
-  google.script.run
-    .withSuccessHandler(function(items) {
-      allItems = items || [];
-      console.log('Items loaded: ' + allItems.length); // Check browser console
-    })
-    .withFailureHandler(function(err) {
-      console.log('Error: ' + err.message);
-    })
-    .getItemNames(); // ← Must match exactly your Apps Script function name
-}
-
-    
-    items.forEach(item => {
-      const option = document.createElement("option");
-      option.value = item;
-      datalist.appendChild(option);
-    });
-  }).getAllItems();
-}
-
-// Call when page loads
-document.addEventListener("DOMContentLoaded", function() {
-  loadItemAutocomplete();
-});
-
-function getAllItems() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetNames = ["Opening Stock Store1", "Opening Stock Store2", "Opening Stock Store3"];
-  
-  let items = [];
-  
-  for (let s = 0; s < sheetNames.length; s++) {
-    const sheet = ss.getSheetByName(sheetNames[s]);
-    
-    if (!sheet) continue;
-    
-    const data = sheet.getRange("A:C").getValues();
-    
-    for (let i = 1; i < data.length; i++) {
-      const itemName = data[i][1]; // Column B
-      
-      if (itemName && itemName.trim() !== "") {
-        if (!items.includes(itemName)) {
-          items.push(itemName);
-        }
-      }
-    }
-  }
-  
-  items.sort();
-  return items;
-}
-    // Load all items for autocomplete in Add Stock tab
-let allItems = [];
-
-// Load items from Opening Stock sheets
+// ===================== DROPDOWN AUTOCOMPLETE =====================
 function loadItemAutocomplete() {
   if (typeof google === 'undefined') {
-    setTimeout(loadItemAutocomplete, 500); // Retry after 500ms if google not ready
+    // Retry slightly later if google API is still loading
+    setTimeout(loadItemAutocomplete, 500); 
     return;
   }
   google.script.run
@@ -976,7 +865,6 @@ function loadItemAutocomplete() {
     .getItemNames();
 }
 
-// Show all items when input is clicked
 function showAllItems() {
   if (allItems.length === 0) {
     console.warn('No items to show!');
@@ -1010,23 +898,6 @@ function renderDropdown(items) {
     div.textContent = item;
     div.style.cssText = 'padding:11px 15px; cursor:pointer; border-bottom:1px solid #f0f0f0; font-size:14px;';
     div.onmouseover = function() { this.style.background = '#f3e5f5'; };
-    div.onmouseout = function() { this.style.background = 'white'; };
-    div.onclick = function() {
-      document.getElementById('itemNameInput').value = item;
-      dropdown.style.display = 'none';
-    };
-    dropdown.appendChild(div);
-  });
-
-  dropdown.style.display = 'block';
-}
-
-
-  items.forEach(function(item) {
-    const div = document.createElement('div');
-    div.textContent = item;
-    div.style.cssText = 'padding:11px 15px; cursor:pointer; border-bottom:1px solid #f0f0f0; font-size:14px;';
-    div.onmouseover = function() { this.style.background = '#f3e5f5'; };
     div.onmouseout  = function() { this.style.background = 'white'; };
     div.onclick = function() {
       document.getElementById('itemNameInput').value = item;
@@ -1051,6 +922,22 @@ document.addEventListener('click', function(e) {
 window.addEventListener('load', function() {
   loadItemAutocomplete();
 });
+
+// ===================== AUTO LOGIN =====================
+const _saved = localStorage.getItem('eifUser');
+if (_saved) {
+    try {
+        const d = JSON.parse(_saved);
+        for (let k in USERS) {
+            if (USERS[k].store === d.store) {
+                currentUser = USERS[k];
+                showApp();
+                break;
+            }
+        }
+    } catch (e) { localStorage.removeItem('eifUser'); }
+}
+
 
 
 
