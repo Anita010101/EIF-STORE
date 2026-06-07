@@ -589,6 +589,38 @@ async function addStock() {
     if (!type) return showAddResult('❌ Please select IN or OUT!', 'error');
     if (!itemName) return showAddResult('❌ Please enter item name!', 'error');
     if (!qty || parseFloat(qty) <= 0) return showAddResult('❌ Please enter a valid quantity!', 'error');
+    function addStock() {
+  const store = document.getElementById("addStore").value;
+  const type = document.getElementById("addType").value;
+  const itemName = document.getElementById("addItemName").value.trim();
+  const qty = document.getElementById("addQty").value;
+  const dcNo = document.getElementById("addDcNo").value;
+
+  const datalist = document.getElementById("itemSuggestions");
+  let validItem = false;
+
+  for (let i = 0; i < datalist.options.length; i++) {
+    if (datalist.options[i].value === itemName) {
+      validItem = true;
+      break;
+    }
+  }
+
+  if (!validItem) {
+    document.getElementById("addResult").innerHTML =
+      '<p style="color:red;">❌ Please select an item from the list only.</p>';
+    return;
+  }
+
+  if (!store || !type || !itemName || !qty) {
+    document.getElementById("addResult").innerHTML =
+      '<p style="color:red;">❌ Please fill all required fields.</p>';
+    return;
+  }
+
+  // keep your original submit code here
+}
+
 
     showAddResult('⏳ Submitting...', '');
 
