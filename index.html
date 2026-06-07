@@ -354,7 +354,7 @@
                 </div>
             </div>
 
-            <button class="btn-success" onclick="addStock()" style="width:100%;padding:12px;font-size:16px;margin-top:8px;">
+            <button class="btn-success" onclick="k()" style="width:100%;padding:12px;font-size:16px;margin-top:8px;">
                 ✅ SUBMIT STOCK
             </button>
 
@@ -900,6 +900,53 @@ function getAllItems() {
   items.sort();
   return items;
 }
+    // Load all items for autocomplete in Add Stock tab
+function loadItemAutocomplete() {
+  google.script.run.withSuccessHandler(function(items) {
+    const datalist = document.getElementById("itemSuggestions");
+    datalist.innerHTML = ''; // Clear old items
+    
+    items.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item;
+      datalist.appendChild(option);
+    });
+  }).getAllItems();
+}
+
+// Call when page loads
+document.addEventListener("DOMContentLoaded", function() {
+  loadItemAutocomplete();
+});
+
+function getAllItems() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ["Opening Stock Store1", "Opening Stock Store2", "Opening Stock Store3"];
+  
+  let items = [];
+  
+  for (let s = 0; s < sheetNames.length; s++) {
+    const sheet = ss.getSheetByName(sheetNames[s]);
+    
+    if (!sheet) continue;
+    
+    const data = sheet.getRange("A:C").getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      const itemName = data[i][1]; // Column B
+      
+      if (itemName && itemName.trim() !== "") {
+        if (!items.includes(itemName)) {
+          items.push(itemName);
+        }
+      }
+    }
+  }
+  
+  items.sort();
+  return items;
+}
+
 
 </script>
 </body>
