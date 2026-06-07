@@ -572,7 +572,8 @@ function showTab(tab, btn) {
     if (tab === 'stock') loadStock();
     if (tab === 'history') loadHistory();
     if (tab === 'movement') loadMovement();
-    // Dropdown items are now loaded once on page startup
+   if (tab === 'add') loadItemAutocomplete();
+
 }
 
 // ===================== ADD STOCK =====================
@@ -635,16 +636,28 @@ function showAddResult(msg, type) {
 }
 
 // ===================== LOAD STOCK =====================
-async function loadStock() {
-    const div = document.getElementById('stockContent');
-    if (!div) return;
-    div.innerHTML = '⏳ Loading stock data...';
-    try {
-        const r = await fetch(scriptURL + '?action=getStock&ts=' + Date.now());
-        allStockData = await r.json();
-        renderStock();
-    } catch (e) { div.innerHTML = '❌ Error: ' + e.message; }
+function loadItemAutocomplete() {
+    // If stock already loaded, extract items from it
+    if (allStockData && allStockData.length > 0) {
+        allItems = [...new Set(
+            allStockData.map(d => d.itemName).filter(n => n && n.trim() !== '')
+        )].sort();
+        console.log('Items ready: ' + allItems.length);
+        return;
+    }
+
+    // If stock not loaded yet, fetch it now
+    fetch(scriptURL + '?action=getStock&ts=' + Date.now())
+        .then(r => r.json())
+        .then(data => {
+            allItems = [...new Set(
+                data.map(d => d.itemName).filter(n => n && n.trim() !== '')
+            )].sort();
+            console.log('Items loaded fresh: ' + allItems.length);
+        })
+        .catch(e => console.log('Error loading items: ' + e.message));
 }
+
 
 function renderStock() {
     const div = document.getElementById('stockContent');
