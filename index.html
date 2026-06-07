@@ -339,7 +339,11 @@
 
             <div class="form-group">
                 <label>📝 Item Name *</label>
-                <input type="text" id="addItemName" placeholder="Enter item name" list="itemSuggestions">
+                <input type="text" id="itemName" placeholder="Search & Select Item Name" required list="itemList" autocomplete="off">
+<datalist id="itemList">
+  <!-- Items will load here -->
+</datalist>
+
                 <datalist id="itemSuggestions"></datalist>
             </div>
 
