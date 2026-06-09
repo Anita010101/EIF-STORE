@@ -409,6 +409,10 @@
         <!-- MOVEMENT TAB -->
         <div class="card" id="tab-movement">
             <h2>📈 Stock Movement</h2>
+            <button onclick="exportToExcel('history')" style="margin-left:auto; background:#217346; color:white; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">
+        <i class="fas fa-file-excel"></i> Export to Excel
+    </button>
+</h2>
             <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
                 <select id="movementYear" onchange="renderMovement()" 
                     style="min-width:110px;padding:8px;border-radius:6px;border:1px solid #ddd;">
