@@ -413,17 +413,24 @@
         <i class="fas fa-file-excel"></i> Export to Excel
     </button>
 </h2>
-            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-                <select id="movementYear" onchange="renderMovement()" 
-                    style="min-width:110px;padding:8px;border-radius:6px;border:1px solid #ddd;">
-                </select>
-                <select id="movementMonth" onchange="renderMovement()" 
-                    style="min-width:140px;padding:8px;border-radius:6px;border:1px solid #ddd;">
-                </select>
-                <select id="movementStoreFilter" onchange="renderMovement()" 
-                    style="min-width:150px;padding:8px;border-radius:6px;border:1px solid #ddd;">
-                </select>
-            </div>
+            <div class="filter-container">
+  <label>From Date:</label>
+  <input type="date" id="fromDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+  
+  <label style="margin-left: 20px;">To Date:</label>
+  <input type="date" id="toDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+  
+  <button onclick="loadMovementByDate()" style="margin-left: 20px; padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Search</button>
+  
+  <label style="margin-left: 20px;">Store:</label>
+  <select id="storeFilterMovement" onchange="loadMovementByDate()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+    <option value="All store">All store</option>
+    <option value="Store1">Store 1</option>
+    <option value="Store2">Store 2</option>
+    <option value="Store3">Store 3</option>
+  </select>
+</div>
+
             <div id="movementContent">⏳ Loading...</div>
         </div>
 
