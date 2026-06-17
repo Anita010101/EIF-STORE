@@ -556,25 +556,21 @@ function populateStoreDropdowns() {
     });
 }
 
-function populateMonthYear() {
-    const yearSel = document.getElementById('movementYear');
-    const monthSel = document.getElementById('movementMonth');
-    const now = new Date();
+function loadMovementByDate() {
+  const fromDate = document.getElementById('fromDate').value;
+  const toDate = document.getElementById('toDate').value;
+  const store = document.getElementById('storeFilterMovement').value;
 
-    if (yearSel) {
-        yearSel.innerHTML = '<option value="">All Years</option>';
-        for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) {
-            yearSel.innerHTML += `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`;
-        }
-    }
+  if (!fromDate || !toDate) {
+    alert('Please select both From and To dates');
+    return;
+  }
 
-    if (monthSel) {
-        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        monthSel.innerHTML = '<option value="">All Months</option>';
-        months.forEach((m, i) => {
-            monthSel.innerHTML += `<option value="${i+1}" ${(i+1) === now.getMonth()+1 ? 'selected' : ''}>${m}</option>`;
-        });
-    }
+  google.script.run.withSuccessHandler(function(data) {
+    displayMovement(data);
+  }).getMovement('movement', fromDate, toDate, store);
+}
+
 }
 
 // ===================== SHOW TAB =====================
