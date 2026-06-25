@@ -24,22 +24,22 @@
         #appScreen { display: none; }
         #appScreen.active { display: flex; flex-direction: column; min-height: 100vh; }
 
-        .login-box {
+        .-box {
             background: white; padding: 40px; border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 400px;
         }
-        .login-box h1 { color: #333; margin-bottom: 8px; }
-        .login-box p { color: #666; margin-bottom: 24px; font-size: 14px; }
-        .login-box input {
+        .-box h1 { color: #333; margin-bottom: 8px; }
+        .-box p { color: #666; margin-bottom: 24px; font-size: 14px; }
+        .-box input {
             width: 100%; padding: 12px; margin-bottom: 16px;
             border: 1px solid #ddd; border-radius: 6px; font-size: 16px;
         }
-        .login-box button {
+        .-box button {
             width: 100%; padding: 12px; background: #667eea; color: white;
             border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
         }
-        .login-box button:hover { background: #764ba2; }
-        #loginError { color: red; margin-bottom: 12px; font-size: 14px; }
+        .-box button:hover { background: #764ba2; }
+        #Error { color: red; margin-bottom: 12px; font-size: 14px; }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -348,7 +348,7 @@
 
 <script>
 // ===================== CONFIG =====================
-const scriptURL = 'https://script.google.com/macros/s/AKfycbysOj0ekaHWRrERaUARKBq-tuLKCYWQ6WiQ0khOFLcGlwcArQpQ3gmRPTi3VO_OAlUnTw/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbxDeg2WkN7QDw7rjJjJuaClDbtJmCGa2mj7YGo3Tv1kpNDfueWYPyXCfGe6qxrknjXDiA/exec';
 
 const USERS = {
     master: { password: 'EIF2026', store: null,      label: '👑 Master Admin' },
